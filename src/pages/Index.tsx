@@ -7,7 +7,6 @@ import { createClassroom, joinClassroom } from "@/lib/store";
 import { BookOpen, Users, GraduationCap, ArrowRight, ClipboardCheck, Brain, FileText, ShieldCheck } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import mitAoeBg from "@/assets/mit-aoe-bg.jpg";
-import mitAoeLogo from "@/assets/mit-aoe-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -47,7 +46,11 @@ const Index = () => {
           <ThemeToggle />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
-          <img src={mitAoeLogo} alt="MIT Academy of Engineering" className="h-14 sm:h-20 mx-auto mb-6" />
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <span className="text-4xl sm:text-5xl font-bold tracking-tight">MIT</span>
+            <div className="w-px h-10 sm:h-12 bg-foreground/30" />
+            <span className="text-lg sm:text-xl font-medium leading-tight text-left">Academy of<br />Engineering</span>
+          </div>
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
             MIT AOE Classrooms
