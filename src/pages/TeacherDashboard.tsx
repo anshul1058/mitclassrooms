@@ -15,6 +15,7 @@ import {
   Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const TeacherDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -147,6 +148,7 @@ const TeacherDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <div className="flex items-center gap-2 bg-muted rounded-lg px-4 py-2">
               <span className="text-sm text-muted-foreground">Code:</span>
               <span className="font-mono text-xl font-bold tracking-widest">{classroom.code}</span>
