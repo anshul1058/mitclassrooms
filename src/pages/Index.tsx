@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createClassroom, joinClassroom } from "@/lib/store";
 import { BookOpen, Users, GraduationCap, ArrowRight } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import mitAoeBg from "@/assets/mit-aoe-bg.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -31,17 +32,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${mitAoeBg})` }}
+      />
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+
       {/* Hero */}
       <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-background" />
         <div className="absolute top-4 right-4 z-10">
           <ThemeToggle />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
-            Offline Classroom Manager
+            MIT AOE Classrooms
           </div>
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-4">
             Keep Students
@@ -56,7 +63,7 @@ const Index = () => {
       </header>
 
       {/* Cards */}
-      <main className="max-w-4xl mx-auto px-4 pb-16 -mt-4 w-full grid md:grid-cols-2 gap-6">
+      <main className="relative max-w-4xl mx-auto px-4 pb-16 -mt-4 w-full grid md:grid-cols-2 gap-6">
         {/* Teacher Card */}
         <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader>
