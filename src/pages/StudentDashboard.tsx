@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Brain, CheckCircle2, AlertTriangle } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const StudentDashboard = () => {
   const { classroomId, studentId } = useParams<{ classroomId: string; studentId: string }>();
@@ -56,9 +57,12 @@ const StudentDashboard = () => {
             <h1 className="text-xl font-bold">Hi, {student.name}!</h1>
             <p className="text-sm text-muted-foreground">{classroom.teacherName}'s Class</p>
           </div>
-          <Badge variant={classroom.isActive ? "default" : "secondary"} className="text-sm">
-            {classroom.isActive ? "🟢 Class Active" : "Class Ended"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Badge variant={classroom.isActive ? "default" : "secondary"} className="text-sm">
+              {classroom.isActive ? "🟢 Class Active" : "Class Ended"}
+            </Badge>
+          </div>
         </div>
       </header>
 
