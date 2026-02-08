@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClassroom, joinClassroom } from "@/lib/store";
-import { BookOpen, Users, GraduationCap, ArrowRight } from "lucide-react";
+import { BookOpen, Users, GraduationCap, ArrowRight, ClipboardCheck, Brain, FileText, ShieldCheck } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import mitAoeBg from "@/assets/mit-aoe-bg.jpg";
+import mitAoeLogo from "@/assets/mit-aoe-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Index = () => {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${mitAoeBg})` }}
       />
-      <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
 
       {/* Hero */}
       <header className="relative overflow-hidden">
@@ -46,6 +47,7 @@ const Index = () => {
           <ThemeToggle />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
+          <img src={mitAoeLogo} alt="MIT Academy of Engineering" className="h-14 sm:h-20 mx-auto mb-6" />
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
             MIT AOE Classrooms
@@ -124,6 +126,36 @@ const Index = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Features Section */}
+      <section className="relative max-w-5xl mx-auto px-4 pb-16 w-full">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">How It Works</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { icon: ClipboardCheck, title: "Attendance Tracking", desc: "Mark attendance instantly and see who's present in real-time." },
+            { icon: Brain, title: "Live Quizzes", desc: "Create MCQ quizzes and share them with students during class." },
+            { icon: FileText, title: "Share Materials", desc: "Upload and share PDFs, documents, and images with the class." },
+            { icon: ShieldCheck, title: "Tab Detection", desc: "Know when students switch tabs or leave the app during class." },
+          ].map((f, i) => (
+            <Card key={i} className="bg-card/80 backdrop-blur-sm text-center">
+              <CardContent className="pt-6">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <f.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-1">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative border-t bg-card/60 backdrop-blur-sm mt-auto">
+        <div className="max-w-5xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
+          © {new Date().getFullYear()} MIT Academy of Engineering, Pune. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };
