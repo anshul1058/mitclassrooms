@@ -1,17 +1,16 @@
 import { useEffect } from "react";
-import { updateStudentTab } from "@/lib/store";
+import { updateTabStatusAction } from "@/hooks/useClassroomData";
 
-export function useTabDetection(classroomId: string | null, studentId: string | null, isClassActive: boolean) {
+export function useTabDetection(classroomId: string | null, userId: string | null, isClassActive: boolean) {
   useEffect(() => {
-    if (!classroomId || !studentId || !isClassActive) return;
+    if (!classroomId || !userId || !isClassActive) return;
 
     const handleVisibility = () => {
-      const isActive = !document.hidden;
-      updateStudentTab(classroomId, studentId, isActive);
+      updateTabStatusAction(classroomId, userId, !document.hidden);
     };
 
-    const handleBlur = () => updateStudentTab(classroomId, studentId, false);
-    const handleFocus = () => updateStudentTab(classroomId, studentId, true);
+    const handleBlur = () => updateTabStatusAction(classroomId, userId, false);
+    const handleFocus = () => updateTabStatusAction(classroomId, userId, true);
 
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("blur", handleBlur);
@@ -22,5 +21,5 @@ export function useTabDetection(classroomId: string | null, studentId: string | 
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [classroomId, studentId, isClassActive]);
+  }, [classroomId, userId, isClassActive]);
 }

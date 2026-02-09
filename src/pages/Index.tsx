@@ -1,50 +1,67 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClassroom, joinClassroom } from "@/lib/store";
-import { BookOpen, Users, GraduationCap, ArrowRight, ClipboardCheck, Brain, FileText, ShieldCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { BookOpen, Users, GraduationCap, ArrowRight, ClipboardCheck, Brain, FileText, ShieldCheck, LogIn, LogOut } from "lucide-react";
+import { createClassroomAction, joinClassroomAction } from "@/hooks/useClassroomData";
 import ThemeToggle from "@/components/ThemeToggle";
 import mitAoeBg from "@/assets/mit-aoe-bg.jpg";
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [teacherName, setTeacherName] = useState("");
-  const [studentName, setStudentName] = useState("");
-  const [studentPrn, setStudentPrn] = useState("");
+  const { user, role, profile, loading, signOut } = useAuth();
   const [classCode, setClassCode] = useState("");
   const [joinError, setJoinError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleCreateClass = () => {
-    if (!teacherName.trim()) return;
-    const classroom = createClassroom(teacherName.trim());
-    navigate(`/teacher/${classroom.id}`);
+  const handleCreateClass = async () => {
+    if (!user) return;
+    setActionLoading(true);
+    const id = await createClassroomAction(user.id);
+    if (id) navigate(`/teacher/${id}`);
+    setActionLoading(false);
   };
 
-  const handleJoinClass = () => {
-    if (!studentName.trim() || !classCode.trim()) return;
-    const result = joinClassroom(classCode.trim().toUpperCase(), studentName.trim());
-    if (!result) {
+  const handleJoinClass = async () => {
+    if (!user || !classCode.trim()) return;
+    setActionLoading(true);
+    const id = await joinClassroomAction(classCode.trim().toUpperCase(), user.id);
+    if (id) {
+      navigate(`/student/${id}`);
+    } else {
       setJoinError("Invalid or expired class code");
-      return;
     }
-    navigate(`/student/${result.classroom.id}/${result.student.id}`);
+    setActionLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
   };
 
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${mitAoeBg})` }}
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${mitAoeBg})` }} />
       <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
 
       {/* Hero */}
       <header className="relative overflow-hidden">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          {user && (
+            <>
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {profile?.name} ({role})
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1">
+                <LogOut className="w-4 h-4" /> Sign Out
+              </Button>
+            </>
+          )}
           <ThemeToggle />
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
@@ -69,85 +86,70 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Tabs */}
+      {/* Action Area */}
       <main className="relative max-w-md mx-auto px-4 pb-16 -mt-4 w-full">
-        <Tabs defaultValue="teacher" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="teacher" className="gap-2">
-              <GraduationCap className="w-4 h-4" /> Teacher
-            </TabsTrigger>
-            <TabsTrigger value="student" className="gap-2">
-              <Users className="w-4 h-4" /> Student
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="teacher">
-            <Card className="border-2 border-primary/20 shadow-lg">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
-                  <GraduationCap className="w-6 h-6 text-primary" />
-                </div>
-                <CardTitle className="text-2xl">I'm a Teacher</CardTitle>
-                <CardDescription>Create a class and get a join code for your students</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  placeholder="Your name"
-                  value={teacherName}
-                  onChange={(e) => setTeacherName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateClass()}
-                />
-                <Button className="w-full gap-2" size="lg" onClick={handleCreateClass} disabled={!teacherName.trim()}>
-                  Create Classroom <ArrowRight className="w-4 h-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="student">
-            <Card className="border-2 border-accent/20 shadow-lg">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-2">
-                  <Users className="w-6 h-6 text-accent" />
-                </div>
-                <CardTitle className="text-2xl">I'm a Student</CardTitle>
-                <CardDescription>Join your teacher's class with a code</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  placeholder="Your name"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                />
-                <Input
-                  placeholder="PRN Number"
-                  value={studentPrn}
-                  onChange={(e) => setStudentPrn(e.target.value)}
-                />
-                <Input
-                  placeholder="Class code (e.g. ABC123)"
-                  value={classCode}
-                  onChange={(e) => {
-                    setClassCode(e.target.value.toUpperCase());
-                    setJoinError("");
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && handleJoinClass()}
-                  maxLength={6}
-                  className="font-mono tracking-widest text-center text-lg"
-                />
-                {joinError && <p className="text-sm text-destructive">{joinError}</p>}
-                <Button
-                  className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
-                  size="lg"
-                  onClick={handleJoinClass}
-                  disabled={!studentName.trim() || classCode.length < 6}
-                >
-                  Join Class <ArrowRight className="w-4 h-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {!user ? (
+          <Card className="border-2 shadow-lg text-center">
+            <CardContent className="pt-8 pb-8 space-y-4">
+              <LogIn className="w-10 h-10 mx-auto text-primary" />
+              <h2 className="text-xl font-semibold">Sign in to get started</h2>
+              <p className="text-sm text-muted-foreground">Create an account or sign in to create or join a classroom.</p>
+              <Button className="w-full gap-2" size="lg" onClick={() => navigate("/auth")}>
+                <LogIn className="w-4 h-4" /> Sign In / Sign Up
+              </Button>
+            </CardContent>
+          </Card>
+        ) : role === "teacher" ? (
+          <Card className="border-2 border-primary/20 shadow-lg">
+            <CardHeader>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                <GraduationCap className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Welcome, {profile?.name}!</CardTitle>
+              <CardDescription>Create a new classroom session for your students</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full gap-2" size="lg" onClick={handleCreateClass} disabled={actionLoading}>
+                {actionLoading ? "Creating..." : <>Create Classroom <ArrowRight className="w-4 h-4" /></>}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : role === "student" ? (
+          <Card className="border-2 border-accent/20 shadow-lg">
+            <CardHeader>
+              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-2">
+                <Users className="w-6 h-6 text-accent" />
+              </div>
+              <CardTitle className="text-2xl">Welcome, {profile?.name}!</CardTitle>
+              <CardDescription>Join your teacher's class with a code</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                placeholder="Class code (e.g. ABC123)"
+                value={classCode}
+                onChange={(e) => { setClassCode(e.target.value.toUpperCase()); setJoinError(""); }}
+                onKeyDown={(e) => e.key === "Enter" && handleJoinClass()}
+                maxLength={6}
+                className="font-mono tracking-widest text-center text-lg"
+              />
+              {joinError && <p className="text-sm text-destructive">{joinError}</p>}
+              <Button
+                className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+                size="lg"
+                onClick={handleJoinClass}
+                disabled={actionLoading || classCode.length < 6}
+              >
+                {actionLoading ? "Joining..." : <>Join Class <ArrowRight className="w-4 h-4" /></>}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-2 shadow-lg text-center">
+            <CardContent className="pt-8 pb-8">
+              <p className="text-muted-foreground">Loading your profile...</p>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       {/* Features Section */}
