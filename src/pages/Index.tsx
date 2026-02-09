@@ -13,6 +13,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [teacherName, setTeacherName] = useState("");
   const [studentName, setStudentName] = useState("");
+  const [studentPrn, setStudentPrn] = useState("");
   const [classCode, setClassCode] = useState("");
   const [joinError, setJoinError] = useState("");
 
@@ -117,6 +118,11 @@ const Index = () => {
                   placeholder="Your name"
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
+                />
+                <Input
+                  placeholder="PRN Number"
+                  value={studentPrn}
+                  onChange={(e) => setStudentPrn(e.target.value)}
                 />
                 <Input
                   placeholder="Class code (e.g. ABC123)"
