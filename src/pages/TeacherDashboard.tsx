@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useClassroom, stopClassroom, markAttendance, toggleStudentPresence, addQuiz, shareFile } from "@/lib/store";
-import type { QuizQuestion } from "@/lib/store";
+import { useAuth } from "@/hooks/useAuth";
+import { useClassroomData, stopClassroomAction, markAttendanceAction, togglePresenceAction, addQuizAction, shareFileAction } from "@/hooks/useClassroomData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,14 +20,22 @@ import ThemeToggle from "@/components/ThemeToggle";
 const TeacherDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
   const navigate = useNavigate();
-  const classroom = useClassroom(classroomId || "");
+  const { user } = useAuth();
+  const { classroom, members, quizzes, quizAnswers, sharedFiles, loading } = useClassroomData(classroomId);
 
-  // Quiz creation state
   const [quizTitle, setQuizTitle] = useState("");
   const [questions, setQuestions] = useState<{ question: string; options: string[]; correctIndex: number }[]>([
     { question: "", options: ["", "", "", ""], correctIndex: 0 },
   ]);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading classroom...</p>
+      </div>
+    );
+  }
 
   if (!classroom) {
     return (
@@ -47,13 +55,13 @@ const TeacherDashboard = () => {
     toast.success("Code copied!");
   };
 
-  const handleStopClass = () => {
-    stopClassroom(classroom.id);
+  const handleStopClass = async () => {
+    await stopClassroomAction(classroom.id);
     toast.info("Class ended");
   };
 
-  const handleMarkAttendance = () => {
-    markAttendance(classroom.id);
+  const handleMarkAttendance = async () => {
+    await markAttendanceAction(classroom.id);
     toast.success("Attendance marked for all present students");
   };
 
@@ -65,7 +73,7 @@ const TeacherDashboard = () => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         const url = URL.createObjectURL(file);
-        shareFile(classroom.id, { name: file.name, url });
+        shareFileAction(classroom.id, file.name, url);
         toast.success(`"${file.name}" shared with students`);
       }
     };
@@ -82,68 +90,50 @@ const TeacherDashboard = () => {
   };
 
   const updateQuestion = (idx: number, field: string, value: string | number) => {
-    setQuestions(
-      questions.map((q, i) =>
-        i === idx ? { ...q, [field]: value } : q
-      )
-    );
+    setQuestions(questions.map((q, i) => (i === idx ? { ...q, [field]: value } : q)));
   };
 
   const updateOption = (qIdx: number, oIdx: number, value: string) => {
-    setQuestions(
-      questions.map((q, i) =>
-        i === qIdx ? { ...q, options: q.options.map((o, j) => (j === oIdx ? value : o)) } : q
-      )
-    );
+    setQuestions(questions.map((q, i) => (i === qIdx ? { ...q, options: q.options.map((o, j) => (j === oIdx ? value : o)) } : q)));
   };
 
-  const handleCreateQuiz = () => {
+  const handleCreateQuiz = async () => {
     if (!quizTitle.trim()) return;
-    const valid = questions.every(
-      (q) => q.question.trim() && q.options.every((o) => o.trim())
-    );
-    if (!valid) {
-      toast.error("Fill in all questions and options");
-      return;
-    }
-    const quizQuestions: Omit<QuizQuestion, "id">[] = questions.map((q) => ({
-      question: q.question,
-      options: q.options,
-      correctIndex: q.correctIndex,
-    }));
-    addQuiz(classroom.id, { title: quizTitle, questions: quizQuestions as QuizQuestion[] });
+    const valid = questions.every((q) => q.question.trim() && q.options.every((o) => o.trim()));
+    if (!valid) { toast.error("Fill in all questions and options"); return; }
+    await addQuizAction(classroom.id, quizTitle, questions);
     toast.success("Quiz created and shared!");
     setQuizTitle("");
     setQuestions([{ question: "", options: ["", "", "", ""], correctIndex: 0 }]);
     setQuizDialogOpen(false);
   };
 
-  const distracted = classroom.students.filter((s) => !s.isTabActive);
+  const distracted = members.filter((s) => !s.is_tab_active);
+
   const quizResults = (quizId: string) => {
-    const quiz = classroom.quizzes.find((q) => q.id === quizId);
+    const quiz = quizzes.find((q) => q.id === quizId);
     if (!quiz) return [];
-    return classroom.students.map((s) => {
-      const answers = classroom.quizAnswers.filter(
-        (a) => a.studentId === s.id && quiz.questions.some((q) => q.id === a.questionId)
+    return members.map((s) => {
+      const answers = quizAnswers.filter(
+        (a) => a.student_id === s.user_id && quiz.questions.some((q) => q.id === a.question_id)
       );
-      const correct = answers.filter((a) => a.isCorrect).length;
+      const correct = answers.filter((a: any) => a.is_correct).length;
       return { student: s, correct, total: quiz.questions.length, answered: answers.length };
     });
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{classroom.teacherName}'s Classroom</h1>
+            <h1 className="text-2xl font-bold">{classroom.teacher_name}'s Classroom</h1>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant={classroom.isActive ? "default" : "secondary"}>
-                {classroom.isActive ? "Live" : "Ended"}
+              <Badge variant={classroom.is_active ? "default" : "secondary"}>
+                {classroom.is_active ? "Live" : "Ended"}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                {classroom.students.length} student{classroom.students.length !== 1 ? "s" : ""}
+                {members.length} student{members.length !== 1 ? "s" : ""}
               </span>
             </div>
           </div>
@@ -156,7 +146,7 @@ const TeacherDashboard = () => {
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            {classroom.isActive && (
+            {classroom.is_active && (
               <Button variant="destructive" size="sm" onClick={handleStopClass} className="gap-1">
                 <Power className="w-4 h-4" /> End Class
               </Button>
@@ -165,8 +155,7 @@ const TeacherDashboard = () => {
         </div>
       </header>
 
-      {/* Alert for distracted students */}
-      {distracted.length > 0 && classroom.isActive && (
+      {distracted.length > 0 && classroom.is_active && (
         <div className="max-w-6xl mx-auto px-4 mt-4">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
@@ -178,25 +167,15 @@ const TeacherDashboard = () => {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-6">
         <Tabs defaultValue="students">
           <TabsList className="mb-6">
-            <TabsTrigger value="students" className="gap-1.5">
-              <Users className="w-4 h-4" /> Students
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-1.5">
-              <ClipboardCheck className="w-4 h-4" /> Attendance
-            </TabsTrigger>
-            <TabsTrigger value="quizzes" className="gap-1.5">
-              <Brain className="w-4 h-4" /> Quizzes
-            </TabsTrigger>
-            <TabsTrigger value="files" className="gap-1.5">
-              <FileText className="w-4 h-4" /> Files
-            </TabsTrigger>
+            <TabsTrigger value="students" className="gap-1.5"><Users className="w-4 h-4" /> Students</TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-1.5"><ClipboardCheck className="w-4 h-4" /> Attendance</TabsTrigger>
+            <TabsTrigger value="quizzes" className="gap-1.5"><Brain className="w-4 h-4" /> Quizzes</TabsTrigger>
+            <TabsTrigger value="files" className="gap-1.5"><FileText className="w-4 h-4" /> Files</TabsTrigger>
           </TabsList>
 
-          {/* Students Tab */}
           <TabsContent value="students">
             <Card>
               <CardHeader>
@@ -204,24 +183,26 @@ const TeacherDashboard = () => {
                 <CardDescription>Students who joined with your class code</CardDescription>
               </CardHeader>
               <CardContent>
-                {classroom.students.length === 0 ? (
+                {members.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No students have joined yet. Share your code!</p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>PRN</TableHead>
                         <TableHead>Tab Status</TableHead>
                         <TableHead>Tab Switches</TableHead>
                         <TableHead>Joined</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {classroom.students.map((s) => (
+                      {members.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">{s.name}</TableCell>
+                          <TableCell className="font-mono text-sm">{s.prn || "—"}</TableCell>
                           <TableCell>
-                            {s.isTabActive ? (
+                            {s.is_tab_active ? (
                               <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] gap-1">
                                 <Eye className="w-3 h-3" /> Active
                               </Badge>
@@ -232,12 +213,12 @@ const TeacherDashboard = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <span className={s.tabSwitchCount > 2 ? "text-destructive font-semibold" : ""}>
-                              {s.tabSwitchCount}
+                            <span className={s.tab_switch_count > 2 ? "text-destructive font-semibold" : ""}>
+                              {s.tab_switch_count}
                             </span>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {s.joinedAt.toLocaleTimeString()}
+                            {new Date(s.joined_at).toLocaleTimeString()}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -248,7 +229,6 @@ const TeacherDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Attendance Tab */}
           <TabsContent value="attendance">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -258,37 +238,39 @@ const TeacherDashboard = () => {
                 </div>
                 <Button
                   onClick={handleMarkAttendance}
-                  disabled={classroom.attendanceMarked || classroom.students.length === 0}
+                  disabled={classroom.attendance_marked || members.length === 0}
                   className="gap-1"
                 >
                   <ClipboardCheck className="w-4 h-4" />
-                  {classroom.attendanceMarked ? "Marked ✓" : "Mark Attendance"}
+                  {classroom.attendance_marked ? "Marked ✓" : "Mark Attendance"}
                 </Button>
               </CardHeader>
               <CardContent>
-                {classroom.students.length === 0 ? (
+                {members.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No students to mark</p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>PRN</TableHead>
                         <TableHead>Present</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {classroom.students.map((s) => (
+                      {members.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">{s.name}</TableCell>
+                          <TableCell className="font-mono text-sm">{s.prn || "—"}</TableCell>
                           <TableCell>
                             <Button
-                              variant={s.isPresent ? "default" : "outline"}
+                              variant={s.is_present ? "default" : "outline"}
                               size="sm"
-                              onClick={() => toggleStudentPresence(classroom.id, s.id)}
+                              onClick={() => togglePresenceAction(classroom.id, s.id, s.is_present)}
                               className="gap-1"
                             >
-                              {s.isPresent ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                              {s.isPresent ? "Present" : "Absent"}
+                              {s.is_present ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                              {s.is_present ? "Present" : "Absent"}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -300,16 +282,13 @@ const TeacherDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Quizzes Tab */}
           <TabsContent value="quizzes">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Quizzes</h2>
                 <Dialog open={quizDialogOpen} onOpenChange={setQuizDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="gap-1">
-                      <Plus className="w-4 h-4" /> Create Quiz
-                    </Button>
+                    <Button className="gap-1"><Plus className="w-4 h-4" /> Create Quiz</Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
@@ -331,11 +310,7 @@ const TeacherDashboard = () => {
                               </Button>
                             )}
                           </div>
-                          <Textarea
-                            value={q.question}
-                            onChange={(e) => updateQuestion(qi, "question", e.target.value)}
-                            placeholder="Enter question"
-                          />
+                          <Textarea value={q.question} onChange={(e) => updateQuestion(qi, "question", e.target.value)} placeholder="Enter question" />
                           <div className="grid grid-cols-2 gap-2">
                             {q.options.map((o, oi) => (
                               <div key={oi} className="flex items-center gap-2">
@@ -343,19 +318,12 @@ const TeacherDashboard = () => {
                                   type="button"
                                   onClick={() => updateQuestion(qi, "correctIndex", oi)}
                                   className={`w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${
-                                    q.correctIndex === oi
-                                      ? "border-primary bg-primary text-primary-foreground"
-                                      : "border-muted-foreground"
+                                    q.correctIndex === oi ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground"
                                   }`}
                                 >
                                   {q.correctIndex === oi && <Check className="w-3 h-3" />}
                                 </button>
-                                <Input
-                                  value={o}
-                                  onChange={(e) => updateOption(qi, oi, e.target.value)}
-                                  placeholder={`Option ${oi + 1}`}
-                                  className="text-sm"
-                                />
+                                <Input value={o} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} className="text-sm" />
                               </div>
                             ))}
                           </div>
@@ -372,14 +340,14 @@ const TeacherDashboard = () => {
                 </Dialog>
               </div>
 
-              {classroom.quizzes.length === 0 ? (
+              {quizzes.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No quizzes yet. Create one to engage your students!
                   </CardContent>
                 </Card>
               ) : (
-                classroom.quizzes.map((quiz) => {
+                quizzes.map((quiz) => {
                   const results = quizResults(quiz.id);
                   return (
                     <Card key={quiz.id}>
@@ -387,7 +355,7 @@ const TeacherDashboard = () => {
                         <CardTitle className="text-lg">{quiz.title}</CardTitle>
                         <CardDescription>
                           {quiz.questions.length} question{quiz.questions.length > 1 ? "s" : ""} · Created{" "}
-                          {quiz.createdAt.toLocaleTimeString()}
+                          {new Date(quiz.created_at).toLocaleTimeString()}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -404,9 +372,7 @@ const TeacherDashboard = () => {
                               {results.map((r) => (
                                 <TableRow key={r.student.id}>
                                   <TableCell>{r.student.name}</TableCell>
-                                  <TableCell>
-                                    {r.answered > 0 ? `${r.correct}/${r.total}` : "—"}
-                                  </TableCell>
+                                  <TableCell>{r.answered > 0 ? `${r.correct}/${r.total}` : "—"}</TableCell>
                                   <TableCell>
                                     <Badge variant={r.answered === r.total ? "default" : "secondary"}>
                                       {r.answered === r.total ? "Completed" : "Pending"}
@@ -427,7 +393,6 @@ const TeacherDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* Files Tab */}
           <TabsContent value="files">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -440,17 +405,17 @@ const TeacherDashboard = () => {
                 </Button>
               </CardHeader>
               <CardContent>
-                {classroom.sharedFiles.length === 0 ? (
+                {sharedFiles.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No files shared yet</p>
                 ) : (
                   <div className="space-y-2">
-                    {classroom.sharedFiles.map((f) => (
+                    {sharedFiles.map((f: any) => (
                       <div key={f.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <div className="flex items-center gap-3">
                           <FileText className="w-5 h-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm">{f.name}</p>
-                            <p className="text-xs text-muted-foreground">{f.sharedAt.toLocaleTimeString()}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(f.shared_at).toLocaleTimeString()}</p>
                           </div>
                         </div>
                         <Button variant="outline" size="sm" asChild>

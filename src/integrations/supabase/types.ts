@@ -14,16 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      classroom_members: {
+        Row: {
+          classroom_id: string
+          id: string
+          is_present: boolean
+          is_tab_active: boolean
+          joined_at: string
+          tab_switch_count: number
+          user_id: string
+        }
+        Insert: {
+          classroom_id: string
+          id?: string
+          is_present?: boolean
+          is_tab_active?: boolean
+          joined_at?: string
+          tab_switch_count?: number
+          user_id: string
+        }
+        Update: {
+          classroom_id?: string
+          id?: string
+          is_present?: boolean
+          is_tab_active?: boolean
+          joined_at?: string
+          tab_switch_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_members_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classrooms: {
+        Row: {
+          attendance_marked: boolean
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          teacher_id: string
+        }
+        Insert: {
+          attendance_marked?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          teacher_id: string
+        }
+        Update: {
+          attendance_marked?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          prn: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          prn?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          prn?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_answers: {
+        Row: {
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_index: number
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          id?: string
+          is_correct?: boolean
+          question_id: string
+          selected_index: number
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_index?: number
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_index: number
+          id: string
+          options: Json
+          question: string
+          quiz_id: string
+          sort_order: number
+        }
+        Insert: {
+          correct_index?: number
+          id?: string
+          options?: Json
+          question: string
+          quiz_id: string
+          sort_order?: number
+        }
+        Update: {
+          correct_index?: number
+          id?: string
+          options?: Json
+          question?: string
+          quiz_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          classroom_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+        }
+        Insert: {
+          classroom_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+        }
+        Update: {
+          classroom_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_files: {
+        Row: {
+          classroom_id: string
+          id: string
+          name: string
+          shared_at: string
+          url: string
+        }
+        Insert: {
+          classroom_id: string
+          id?: string
+          name: string
+          shared_at?: string
+          url: string
+        }
+        Update: {
+          classroom_id?: string
+          id?: string
+          name?: string
+          shared_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_files_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_classroom: {
+        Args: { _classroom_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_classroom_member: {
+        Args: { _classroom_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_classroom_teacher: {
+        Args: { _classroom_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "teacher" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +408,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["teacher", "student"],
+    },
   },
 } as const

@@ -1,0 +1,272 @@
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+
+// Generate a 6-char alphanumeric code
+function generateClassCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+export interface ClassroomMember {
+  id: string;
+  user_id: string;
+  name: string;
+  prn: string | null;
+  is_present: boolean;
+  tab_switch_count: number;
+  is_tab_active: boolean;
+  joined_at: string;
+}
+
+export interface QuizWithQuestions {
+  id: string;
+  title: string;
+  is_active: boolean;
+  created_at: string;
+  questions: {
+    id: string;
+    question: string;
+    options: string[];
+    correct_index: number;
+  }[];
+}
+
+export interface ClassroomData {
+  id: string;
+  code: string;
+  teacher_id: string;
+  is_active: boolean;
+  attendance_marked: boolean;
+  created_at: string;
+  teacher_name: string;
+}
+
+export function useClassroomData(classroomId: string | undefined) {
+  const { user } = useAuth();
+  const [classroom, setClassroom] = useState<ClassroomData | null>(null);
+  const [members, setMembers] = useState<ClassroomMember[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizWithQuestions[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<any[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAll = useCallback(async () => {
+    if (!classroomId || !user) return;
+
+    const [classroomRes, membersRes, quizzesRes, answersRes, filesRes] = await Promise.all([
+      supabase.from("classrooms").select("*").eq("id", classroomId).maybeSingle(),
+      supabase.from("classroom_members").select("*").eq("classroom_id", classroomId),
+      supabase.from("quizzes").select("*").eq("classroom_id", classroomId),
+      supabase.from("quiz_answers").select("*, quiz_questions!inner(quiz_id)").filter(
+        "quiz_questions.quiz_id", "in", `(${classroomId})`
+      ).select("*"),
+      supabase.from("shared_files").select("*").eq("classroom_id", classroomId),
+    ]);
+
+    if (classroomRes.data) {
+      // Fetch teacher name
+      const profileRes = await supabase.from("profiles").select("name").eq("user_id", classroomRes.data.teacher_id).maybeSingle();
+      setClassroom({
+        ...classroomRes.data,
+        teacher_name: profileRes.data?.name || "Teacher",
+      });
+    }
+
+    if (membersRes.data) {
+      // Fetch names for all members
+      const userIds = membersRes.data.map((m: any) => m.user_id);
+      const profilesRes = await supabase.from("profiles").select("user_id, name, prn").in("user_id", userIds);
+      const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p]));
+
+      setMembers(
+        membersRes.data.map((m: any) => ({
+          ...m,
+          name: (profileMap.get(m.user_id) as any)?.name || "Unknown",
+          prn: (profileMap.get(m.user_id) as any)?.prn || null,
+        }))
+      );
+    }
+
+    if (quizzesRes.data) {
+      const quizIds = quizzesRes.data.map((q: any) => q.id);
+      let questions: any[] = [];
+      if (quizIds.length > 0) {
+        const qRes = await supabase.from("quiz_questions").select("*").in("quiz_id", quizIds).order("sort_order");
+        questions = qRes.data || [];
+      }
+
+      // Fetch answers for these quizzes
+      let answers: any[] = [];
+      if (quizIds.length > 0) {
+        const questionIds = questions.map((q: any) => q.id);
+        if (questionIds.length > 0) {
+          const aRes = await supabase.from("quiz_answers").select("*").in("question_id", questionIds);
+          answers = aRes.data || [];
+        }
+      }
+      setQuizAnswers(answers);
+
+      setQuizzes(
+        quizzesRes.data.map((q: any) => ({
+          ...q,
+          questions: questions
+            .filter((qq: any) => qq.quiz_id === q.id)
+            .map((qq: any) => ({
+              id: qq.id,
+              question: qq.question,
+              options: Array.isArray(qq.options) ? qq.options : JSON.parse(qq.options || "[]"),
+              correct_index: qq.correct_index,
+            })),
+        }))
+      );
+    }
+
+    setSharedFiles(filesRes.data || []);
+    setLoading(false);
+  }, [classroomId, user]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!classroomId) return;
+
+    const channel = supabase
+      .channel(`classroom-${classroomId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "classroom_members", filter: `classroom_id=eq.${classroomId}` }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "classrooms", filter: `id=eq.${classroomId}` }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "quizzes", filter: `classroom_id=eq.${classroomId}` }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "quiz_questions" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "quiz_answers" }, () => fetchAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "shared_files", filter: `classroom_id=eq.${classroomId}` }, () => fetchAll())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [classroomId, fetchAll]);
+
+  return { classroom, members, quizzes, quizAnswers, sharedFiles, loading, refetch: fetchAll };
+}
+
+// ===== ACTIONS =====
+
+export async function createClassroomAction(teacherId: string): Promise<string | null> {
+  const code = generateClassCode();
+  const { data, error } = await supabase
+    .from("classrooms")
+    .insert({ teacher_id: teacherId, code })
+    .select("id")
+    .single();
+  if (error) {
+    toast.error("Failed to create classroom: " + error.message);
+    return null;
+  }
+  return data.id;
+}
+
+export async function joinClassroomAction(code: string, userId: string): Promise<string | null> {
+  const { data: classroom, error: findErr } = await supabase
+    .from("classrooms")
+    .select("id, is_active")
+    .eq("code", code)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (findErr || !classroom) {
+    toast.error("Invalid or expired class code");
+    return null;
+  }
+
+  // Check if already a member
+  const { data: existing } = await supabase
+    .from("classroom_members")
+    .select("id")
+    .eq("classroom_id", classroom.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) return classroom.id;
+
+  const { error } = await supabase
+    .from("classroom_members")
+    .insert({ classroom_id: classroom.id, user_id: userId });
+
+  if (error) {
+    toast.error("Failed to join: " + error.message);
+    return null;
+  }
+  return classroom.id;
+}
+
+export async function stopClassroomAction(classroomId: string) {
+  await supabase.from("classrooms").update({ is_active: false }).eq("id", classroomId);
+}
+
+export async function markAttendanceAction(classroomId: string) {
+  await supabase.from("classrooms").update({ attendance_marked: true }).eq("id", classroomId);
+}
+
+export async function togglePresenceAction(classroomId: string, memberId: string, currentPresence: boolean) {
+  await supabase.from("classroom_members").update({ is_present: !currentPresence }).eq("id", memberId);
+}
+
+export async function addQuizAction(
+  classroomId: string,
+  title: string,
+  questions: { question: string; options: string[]; correctIndex: number }[]
+) {
+  const { data: quiz, error } = await supabase
+    .from("quizzes")
+    .insert({ classroom_id: classroomId, title })
+    .select("id")
+    .single();
+  if (error || !quiz) { toast.error("Failed to create quiz"); return; }
+
+  const questionRows = questions.map((q, i) => ({
+    quiz_id: quiz.id,
+    question: q.question,
+    options: JSON.stringify(q.options),
+    correct_index: q.correctIndex,
+    sort_order: i,
+  }));
+  await supabase.from("quiz_questions").insert(questionRows);
+}
+
+export async function submitAnswerAction(questionId: string, studentId: string, selectedIndex: number, correctIndex: number) {
+  const { error } = await supabase.from("quiz_answers").insert({
+    question_id: questionId,
+    student_id: studentId,
+    selected_index: selectedIndex,
+    is_correct: selectedIndex === correctIndex,
+  });
+  if (error) toast.error("Failed to submit answer: " + error.message);
+}
+
+export async function shareFileAction(classroomId: string, name: string, url: string) {
+  await supabase.from("shared_files").insert({ classroom_id: classroomId, name, url });
+}
+
+export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean) {
+  // Use upsert-like approach: update the member's tab status
+  const update: any = { is_tab_active: isActive };
+  if (!isActive) {
+    // Increment tab switch count - fetch current first
+    const { data } = await supabase
+      .from("classroom_members")
+      .select("tab_switch_count")
+      .eq("classroom_id", classroomId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (data) update.tab_switch_count = data.tab_switch_count + 1;
+  }
+  await supabase
+    .from("classroom_members")
+    .update(update)
+    .eq("classroom_id", classroomId)
+    .eq("user_id", userId);
+}
