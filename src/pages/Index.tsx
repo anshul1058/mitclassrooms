@@ -57,12 +57,14 @@ const Index = () => {
               <span className="text-sm text-muted-foreground hidden sm:inline">
                 {profile?.name} ({role})
               </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1">
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1 liquid-glass-subtle rounded-full">
                 <LogOut className="w-4 h-4" /> Sign Out
               </Button>
             </>
           )}
-          <ThemeToggle />
+          <div className="liquid-glass-subtle rounded-full">
+            <ThemeToggle />
+          </div>
         </div>
         <div className="relative max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
           <div className="flex items-center justify-center gap-3 mb-6">
@@ -70,7 +72,7 @@ const Index = () => {
             <div className="w-px h-10 sm:h-12 bg-foreground/30" />
             <span className="text-lg sm:text-xl font-medium leading-tight text-left">Academy of<br />Engineering</span>
           </div>
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 liquid-glass-subtle text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
             MIT AOE Classrooms
           </div>
@@ -89,7 +91,7 @@ const Index = () => {
       {/* Action Area */}
       <main className="relative max-w-md mx-auto px-4 pb-16 -mt-4 w-full">
         {!user ? (
-          <Card className="border-2 shadow-lg text-center">
+          <Card className="liquid-glass rounded-2xl border-0 text-center">
             <CardContent className="pt-8 pb-8 space-y-4">
               <LogIn className="w-10 h-10 mx-auto text-primary" />
               <h2 className="text-xl font-semibold">Sign in to get started</h2>
@@ -100,7 +102,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : role === "teacher" ? (
-          <Card className="border-2 border-primary/20 shadow-lg">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader>
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
                 <GraduationCap className="w-6 h-6 text-primary" />
@@ -115,7 +117,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : role === "student" ? (
-          <Card className="border-2 border-accent/20 shadow-lg">
+          <Card className="liquid-glass rounded-2xl border-0">
             <CardHeader>
               <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-2">
                 <Users className="w-6 h-6 text-accent" />
@@ -144,7 +146,7 @@ const Index = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-2 shadow-lg text-center">
+          <Card className="liquid-glass rounded-2xl border-0 text-center">
             <CardContent className="pt-8 pb-8">
               <p className="text-muted-foreground">Loading your profile...</p>
             </CardContent>
@@ -162,7 +164,7 @@ const Index = () => {
             { icon: FileText, title: "Share Materials", desc: "Upload and share PDFs, documents, and images with the class." },
             { icon: ShieldCheck, title: "Tab Detection", desc: "Know when students switch tabs or leave the app during class." },
           ].map((f, i) => (
-            <Card key={i} className="bg-card/80 backdrop-blur-sm text-center">
+            <Card key={i} className="liquid-glass rounded-2xl border-0 text-center">
               <CardContent className="pt-6">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <f.icon className="w-6 h-6 text-primary" />
@@ -176,7 +178,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative border-t bg-card/60 backdrop-blur-sm mt-auto">
+      <footer className="relative border-t border-foreground/5 liquid-glass-subtle mt-auto">
         <div className="max-w-5xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
           © {new Date().getFullYear()} MIT Academy of Engineering, Pune. All rights reserved.
         </div>

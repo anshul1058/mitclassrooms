@@ -149,3 +149,70 @@
     font-family: 'Space Grotesk', sans-serif;
   }
 }
+
+/* Apple Liquid Glass Effect */
+.liquid-glass {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.45) 0%,
+    hsl(var(--card) / 0.25) 50%,
+    hsl(var(--card) / 0.4) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.8) brightness(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8) brightness(1.1);
+  border: 1px solid hsl(var(--foreground) / 0.08);
+  box-shadow:
+    0 8px 32px hsl(var(--foreground) / 0.06),
+    inset 0 1px 0 hsl(var(--background) / 0.4),
+    inset 0 -1px 0 hsl(var(--foreground) / 0.05);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.liquid-glass:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.55) 0%,
+    hsl(var(--card) / 0.35) 50%,
+    hsl(var(--card) / 0.5) 100%
+  );
+  box-shadow:
+    0 12px 40px hsl(var(--foreground) / 0.1),
+    inset 0 1px 0 hsl(var(--background) / 0.5),
+    inset 0 -1px 0 hsl(var(--foreground) / 0.05);
+  transform: translateY(-1px);
+}
+
+.liquid-glass-subtle {
+  background: hsl(var(--card) / 0.3);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid hsl(var(--foreground) / 0.06);
+  box-shadow: 0 4px 16px hsl(var(--foreground) / 0.04);
+}
+
+.dark .liquid-glass {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.4) 0%,
+    hsl(var(--card) / 0.2) 50%,
+    hsl(var(--card) / 0.35) 100%
+  );
+  border: 1px solid hsl(var(--foreground) / 0.1);
+  box-shadow:
+    0 8px 32px hsl(0 0% 0% / 0.3),
+    inset 0 1px 0 hsl(var(--foreground) / 0.08),
+    inset 0 -1px 0 hsl(0 0% 0% / 0.2);
+}
+
+.dark .liquid-glass:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.5) 0%,
+    hsl(var(--card) / 0.3) 50%,
+    hsl(var(--card) / 0.45) 100%
+  );
+  box-shadow:
+    0 12px 40px hsl(0 0% 0% / 0.4),
+    inset 0 1px 0 hsl(var(--foreground) / 0.1),
+    inset 0 -1px 0 hsl(0 0% 0% / 0.2);
+}
