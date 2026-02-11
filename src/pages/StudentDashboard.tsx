@@ -54,7 +54,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+      <header className="border-b border-foreground/5 liquid-glass-subtle">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">Hi, {myMembership.name}!</h1>
@@ -71,7 +71,7 @@ const StudentDashboard = () => {
 
       {!myMembership.is_tab_active && classroom.is_active && (
         <div className="max-w-4xl mx-auto px-4 mt-4">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 flex items-center gap-3">
+          <div className="liquid-glass rounded-xl px-4 py-3 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive" />
             <p className="text-sm font-medium text-destructive">
               Your teacher can see you switched tabs! Stay focused.
@@ -82,7 +82,7 @@ const StudentDashboard = () => {
 
       {!classroom.is_active && (
         <div className="max-w-4xl mx-auto px-4 mt-4">
-          <div className="bg-muted rounded-lg px-4 py-3 text-center">
+          <div className="liquid-glass rounded-xl px-4 py-3 text-center">
             <p className="text-muted-foreground">This class has ended. Thank you for attending!</p>
             <Button variant="outline" className="mt-2" onClick={() => navigate("/")}>Back to Home</Button>
           </div>
@@ -92,13 +92,13 @@ const StudentDashboard = () => {
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {classroom.is_active && (
           <div className="grid grid-cols-2 gap-4">
-            <Card>
+            <Card className="liquid-glass rounded-2xl border-0">
               <CardContent className="pt-4 text-center">
                 <p className="text-2xl font-bold">{myMembership.tab_switch_count}</p>
                 <p className="text-xs text-muted-foreground">Tab Switches</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="liquid-glass rounded-2xl border-0">
               <CardContent className="pt-4 text-center">
                 <p className="text-2xl font-bold">{myMembership.is_present ? "✓" : "✗"}</p>
                 <p className="text-xs text-muted-foreground">Attendance</p>
@@ -113,7 +113,7 @@ const StudentDashboard = () => {
               <Brain className="w-5 h-5 text-primary" /> Quizzes
             </h2>
             {activeQuizzes.map((quiz) => (
-              <Card key={quiz.id}>
+              <Card key={quiz.id} className="liquid-glass rounded-2xl border-0">
                 <CardHeader>
                   <CardTitle className="text-lg">{quiz.title}</CardTitle>
                   <CardDescription>{quiz.questions.length} questions</CardDescription>
@@ -182,7 +182,7 @@ const StudentDashboard = () => {
               <FileText className="w-5 h-5 text-primary" /> Shared Files
             </h2>
             {sharedFiles.map((f: any) => (
-              <Card key={f.id}>
+              <Card key={f.id} className="liquid-glass rounded-2xl border-0">
                 <CardContent className="py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-primary" />
