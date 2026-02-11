@@ -64,11 +64,13 @@ const Auth = () => {
       <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
 
       <div className="absolute top-4 right-4 z-10">
-        <ThemeToggle />
+        <div className="liquid-glass-subtle rounded-full">
+          <ThemeToggle />
+        </div>
       </div>
 
       <main className="relative flex-1 flex items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md shadow-xl border-2">
+        <Card className="w-full max-w-md liquid-glass rounded-2xl border-0">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
               <span className="text-3xl font-bold tracking-tight">MIT</span>
