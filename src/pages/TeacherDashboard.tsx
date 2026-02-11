@@ -124,7 +124,7 @@ const TeacherDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+      <header className="border-b border-foreground/5 liquid-glass-subtle">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold">{classroom.teacher_name}'s Classroom</h1>
@@ -139,7 +139,7 @@ const TeacherDashboard = () => {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <div className="flex items-center gap-2 bg-muted rounded-lg px-4 py-2">
+            <div className="flex items-center gap-2 liquid-glass rounded-xl px-4 py-2">
               <span className="text-sm text-muted-foreground">Code:</span>
               <span className="font-mono text-xl font-bold tracking-widest">{classroom.code}</span>
               <Button variant="ghost" size="icon" onClick={copyCode}>
@@ -157,7 +157,7 @@ const TeacherDashboard = () => {
 
       {distracted.length > 0 && classroom.is_active && (
         <div className="max-w-6xl mx-auto px-4 mt-4">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 flex items-center gap-3">
+          <div className="liquid-glass rounded-xl px-4 py-3 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
             <p className="text-sm">
               <span className="font-semibold text-destructive">{distracted.length} student{distracted.length > 1 ? "s" : ""}</span>{" "}
@@ -177,7 +177,7 @@ const TeacherDashboard = () => {
           </TabsList>
 
           <TabsContent value="students">
-            <Card>
+            <Card className="liquid-glass rounded-2xl border-0">
               <CardHeader>
                 <CardTitle>Connected Students</CardTitle>
                 <CardDescription>Students who joined with your class code</CardDescription>
@@ -230,7 +230,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="attendance">
-            <Card>
+            <Card className="liquid-glass rounded-2xl border-0">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Attendance</CardTitle>
@@ -341,7 +341,7 @@ const TeacherDashboard = () => {
               </div>
 
               {quizzes.length === 0 ? (
-                <Card>
+                <Card className="liquid-glass rounded-2xl border-0">
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No quizzes yet. Create one to engage your students!
                   </CardContent>
@@ -350,7 +350,7 @@ const TeacherDashboard = () => {
                 quizzes.map((quiz) => {
                   const results = quizResults(quiz.id);
                   return (
-                    <Card key={quiz.id}>
+                    <Card key={quiz.id} className="liquid-glass rounded-2xl border-0">
                       <CardHeader>
                         <CardTitle className="text-lg">{quiz.title}</CardTitle>
                         <CardDescription>
@@ -394,7 +394,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="files">
-            <Card>
+            <Card className="liquid-glass rounded-2xl border-0">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Shared Files</CardTitle>
