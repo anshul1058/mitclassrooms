@@ -212,7 +212,9 @@ export async function markAttendanceAction(classroomId: string) {
 }
 
 export async function togglePresenceAction(classroomId: string, memberId: string, currentPresence: boolean) {
-  await supabase.from("classroom_members").update({ is_present: !currentPresence }).eq("id", memberId);
+  const newPresence = !currentPresence;
+  const { error } = await supabase.from("classroom_members").update({ is_present: newPresence }).eq("id", memberId);
+  if (error) toast.error("Failed to update presence: " + error.message);
 }
 
 export async function addQuizAction(
