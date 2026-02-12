@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, stopClassroomAction, markAttendanceAction, togglePresenceAction, addQuizAction, shareFileAction } from "@/hooks/useClassroomData";
@@ -290,7 +291,12 @@ const TeacherDashboard = () => {
                               <Button
                                 variant={s.is_present ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => { if (!s.is_present) togglePresenceAction(classroom.id, s.id, s.is_present); }}
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  if (!s.is_present) {
+                                    await supabase.from("classroom_members").update({ is_present: true }).eq("id", s.id);
+                                  }
+                                }}
                                 className="gap-1 min-w-[60px]"
                               >
                                 <Check className="w-3 h-3" /> P
@@ -298,7 +304,12 @@ const TeacherDashboard = () => {
                               <Button
                                 variant={!s.is_present ? "destructive" : "outline"}
                                 size="sm"
-                                onClick={() => { if (s.is_present) togglePresenceAction(classroom.id, s.id, s.is_present); }}
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  if (s.is_present) {
+                                    await supabase.from("classroom_members").update({ is_present: false }).eq("id", s.id);
+                                  }
+                                }}
                                 className="gap-1 min-w-[60px]"
                               >
                                 <X className="w-3 h-3" /> A
