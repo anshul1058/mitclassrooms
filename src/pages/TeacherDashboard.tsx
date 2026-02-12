@@ -12,8 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -234,16 +235,38 @@ const TeacherDashboard = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Attendance</CardTitle>
-                  <CardDescription>Toggle presence for each student, then mark attendance</CardDescription>
+                  <CardDescription>Mark each student as Present (P) or Absent (A), then finalize</CardDescription>
                 </div>
-                <Button
-                  onClick={handleMarkAttendance}
-                  disabled={classroom.attendance_marked || members.length === 0}
-                  className="gap-1"
-                >
-                  <ClipboardCheck className="w-4 h-4" />
-                  {classroom.attendance_marked ? "Marked ✓" : "Mark Attendance"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={members.length === 0}
+                    onClick={() => {
+                      const data = members.map((s) => ({
+                        Name: s.name,
+                        PRN: s.prn || "—",
+                        Status: s.is_present ? "Present" : "Absent",
+                      }));
+                      const ws = XLSX.utils.json_to_sheet(data);
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+                      XLSX.writeFile(wb, `Attendance_${classroom.code}_${new Date().toLocaleDateString()}.xlsx`);
+                      toast.success("Attendance downloaded!");
+                    }}
+                  >
+                    <Download className="w-4 h-4" /> Download Excel
+                  </Button>
+                  <Button
+                    onClick={handleMarkAttendance}
+                    disabled={classroom.attendance_marked || members.length === 0}
+                    className="gap-1"
+                  >
+                    <ClipboardCheck className="w-4 h-4" />
+                    {classroom.attendance_marked ? "Marked ✓" : "Mark Attendance"}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {members.length === 0 ? (
@@ -254,7 +277,7 @@ const TeacherDashboard = () => {
                       <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>PRN</TableHead>
-                        <TableHead>Present</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -263,15 +286,24 @@ const TeacherDashboard = () => {
                           <TableCell className="font-medium">{s.name}</TableCell>
                           <TableCell className="font-mono text-sm">{s.prn || "—"}</TableCell>
                           <TableCell>
-                            <Button
-                              variant={s.is_present ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => togglePresenceAction(classroom.id, s.id, s.is_present)}
-                              className="gap-1"
-                            >
-                              {s.is_present ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                              {s.is_present ? "Present" : "Absent"}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant={s.is_present ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => { if (!s.is_present) togglePresenceAction(classroom.id, s.id, s.is_present); }}
+                                className="gap-1 min-w-[60px]"
+                              >
+                                <Check className="w-3 h-3" /> P
+                              </Button>
+                              <Button
+                                variant={!s.is_present ? "destructive" : "outline"}
+                                size="sm"
+                                onClick={() => { if (s.is_present) togglePresenceAction(classroom.id, s.id, s.is_present); }}
+                                className="gap-1 min-w-[60px]"
+                              >
+                                <X className="w-3 h-3" /> A
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
