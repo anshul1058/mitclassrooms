@@ -29,22 +29,15 @@ const FilePreviewDialog = ({ open, onOpenChange, file }: FilePreviewDialogProps)
   // Google Docs Viewer for non-native formats (works on mobile too)
   const googleViewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(file.url)}`;
 
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(file.url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      // Fallback: open in new tab for download
-      window.open(file.url, "_blank");
-    }
+  const handleDownload = () => {
+    const a = document.createElement("a");
+    a.href = file.url;
+    a.download = file.name;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (
