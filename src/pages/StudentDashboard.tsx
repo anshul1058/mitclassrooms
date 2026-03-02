@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, submitAnswerAction } from "@/hooks/useClassroomData";
-import { useTabDetection } from "@/hooks/useTabDetection";
+import { useTabDetection, pauseTabDetection } from "@/hooks/useTabDetection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -323,7 +323,7 @@ const StudentDashboard = () => {
                       <span className="font-medium text-sm">{f.name}</span>
                     </div>
                     <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs">
-                      <a href={f.url} target="_blank" rel="noopener noreferrer">
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" onClick={() => pauseTabDetection(5000)}>
                         <Download className="w-3.5 h-3.5" /> Open
                       </a>
                     </Button>
