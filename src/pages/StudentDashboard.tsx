@@ -12,6 +12,7 @@ import {
   Eye, EyeOff, Award, Zap, BookOpen, Download,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import FilePreviewDialog from "@/components/FilePreviewDialog";
 
 const StudentDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -25,6 +26,7 @@ const StudentDashboard = () => {
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
+  const [previewFile, setPreviewFile] = useState<{ name: string; url: string } | null>(null);
 
   // Compute quiz stats
   const quizStats = useMemo(() => {
@@ -322,10 +324,13 @@ const StudentDashboard = () => {
                       </div>
                       <span className="font-medium text-sm">{f.name}</span>
                     </div>
-                    <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs">
-                      <a href={f.url} target="_blank" rel="noopener noreferrer" onClick={() => pauseTabDetection(5000)}>
-                        <Download className="w-3.5 h-3.5" /> Open
-                      </a>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => setPreviewFile({ name: f.name, url: f.url })}
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Preview
                     </Button>
                   </CardContent>
                 </Card>
@@ -334,6 +339,11 @@ const StudentDashboard = () => {
           </div>
         )}
       </main>
+      <FilePreviewDialog
+        open={!!previewFile}
+        onOpenChange={(open) => !open && setPreviewFile(null)}
+        file={previewFile}
+      />
     </div>
   );
 };
