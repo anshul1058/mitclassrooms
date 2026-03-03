@@ -57,13 +57,10 @@ export function useClassroomData(classroomId: string | undefined) {
   const fetchAll = useCallback(async () => {
     if (!classroomId || !user) return;
 
-    const [classroomRes, membersRes, quizzesRes, answersRes, filesRes] = await Promise.all([
+    const [classroomRes, membersRes, quizzesRes, filesRes] = await Promise.all([
       supabase.from("classrooms").select("*").eq("id", classroomId).maybeSingle(),
       supabase.from("classroom_members").select("*").eq("classroom_id", classroomId),
       supabase.from("quizzes").select("*").eq("classroom_id", classroomId),
-      supabase.from("quiz_answers").select("*, quiz_questions!inner(quiz_id)").filter(
-        "quiz_questions.quiz_id", "in", `(${classroomId})`
-      ).select("*"),
       supabase.from("shared_files").select("*").eq("classroom_id", classroomId),
     ]);
 
