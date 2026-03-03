@@ -18,6 +18,7 @@ import {
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
+import FilePreviewDialog from "@/components/FilePreviewDialog";
 
 const TeacherDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -30,6 +31,7 @@ const TeacherDashboard = () => {
     { question: "", options: ["", "", "", ""], correctIndex: 0 },
   ]);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{ name: string; url: string } | null>(null);
 
   if (loading) {
     return (
@@ -71,12 +73,12 @@ const TeacherDashboard = () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.png";
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        const url = URL.createObjectURL(file);
-        shareFileAction(classroom.id, file.name, url);
-        toast.success(`"${file.name}" shared with students`);
+        toast.loading("Uploading file...", { id: "file-upload" });
+        await shareFileAction(classroom.id, file.name, file);
+        toast.success(`"${file.name}" shared with students`, { id: "file-upload" });
       }
     };
     input.click();
@@ -461,8 +463,8 @@ const TeacherDashboard = () => {
                             <p className="text-xs text-muted-foreground">{new Date(f.shared_at).toLocaleTimeString()}</p>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={f.url} target="_blank" rel="noopener noreferrer">View</a>
+                        <Button variant="outline" size="sm" onClick={() => setPreviewFile({ name: f.name, url: f.url })}>
+                          Preview
                         </Button>
                       </div>
                     ))}
@@ -473,6 +475,11 @@ const TeacherDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <FilePreviewDialog
+        open={!!previewFile}
+        onOpenChange={(open) => !open && setPreviewFile(null)}
+        file={previewFile}
+      />
     </div>
   );
 };

@@ -125,7 +125,20 @@ export function useClassroomData(classroomId: string | undefined) {
       );
     }
 
-    setSharedFiles(filesRes.data || []);
+    // Generate signed URLs for storage paths
+    const rawFiles = filesRes.data || [];
+    const filesWithUrls = await Promise.all(
+      rawFiles.map(async (f: any) => {
+        if (f.url.startsWith("http") || f.url.startsWith("blob:")) {
+          return f;
+        }
+        const { data } = await supabase.storage
+          .from("shared-files")
+          .createSignedUrl(f.url, 3600);
+        return { ...f, url: data?.signedUrl || f.url };
+      })
+    );
+    setSharedFiles(filesWithUrls);
     setLoading(false);
   }, [classroomId, user]);
 
@@ -249,8 +262,21 @@ export async function submitAnswerAction(questionId: string, studentId: string, 
   if (error) toast.error("Failed to submit answer: " + error.message);
 }
 
-export async function shareFileAction(classroomId: string, name: string, url: string) {
-  await supabase.from("shared_files").insert({ classroom_id: classroomId, name, url });
+export async function shareFileAction(classroomId: string, name: string, file: File) {
+  const filePath = `${classroomId}/${Date.now()}_${name}`;
+  const { error: uploadError } = await supabase.storage
+    .from("shared-files")
+    .upload(filePath, file);
+  if (uploadError) {
+    toast.error("Failed to upload file: " + uploadError.message);
+    return;
+  }
+  const { error } = await supabase.from("shared_files").insert({
+    classroom_id: classroomId,
+    name,
+    url: filePath,
+  });
+  if (error) toast.error("Failed to share file: " + error.message);
 }
 
 export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean) {
