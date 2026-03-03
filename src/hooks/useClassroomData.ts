@@ -132,7 +132,7 @@ export function useClassroomData(classroomId: string | undefined) {
         const { data } = await supabase.storage
           .from("shared-files")
           .createSignedUrl(f.url, 3600);
-        return { ...f, url: data?.signedUrl || f.url };
+        return { ...f, storage_path: f.url, url: data?.signedUrl || f.url };
       })
     );
     setSharedFiles(filesWithUrls);
@@ -274,6 +274,14 @@ export async function shareFileAction(classroomId: string, name: string, file: F
     url: filePath,
   });
   if (error) toast.error("Failed to share file: " + error.message);
+}
+
+export async function deleteFileAction(fileId: string, storagePath: string) {
+  // Delete from storage
+  await supabase.storage.from("shared-files").remove([storagePath]);
+  // Delete from database
+  const { error } = await supabase.from("shared_files").delete().eq("id", fileId);
+  if (error) toast.error("Failed to delete file: " + error.message);
 }
 
 export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean) {

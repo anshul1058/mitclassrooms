@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useClassroomData, stopClassroomAction, markAttendanceAction, togglePresenceAction, addQuizAction, shareFileAction } from "@/hooks/useClassroomData";
+import { useClassroomData, stopClassroomAction, markAttendanceAction, togglePresenceAction, addQuizAction, shareFileAction, deleteFileAction } from "@/hooks/useClassroomData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -463,9 +463,22 @@ const TeacherDashboard = () => {
                             <p className="text-xs text-muted-foreground">{new Date(f.shared_at).toLocaleTimeString()}</p>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => setPreviewFile({ name: f.name, url: f.url })}>
-                          Preview
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setPreviewFile({ name: f.name, url: f.url })}>
+                            Preview
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={async () => {
+                              await deleteFileAction(f.id, f.storage_path || f.url);
+                              toast.success(`"${f.name}" deleted`);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
