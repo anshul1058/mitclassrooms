@@ -1,0 +1,1 @@
+ALTER TABLE public.classrooms ADD COLUMN chat_enabled boolean NOT NULL DEFAULT true;
