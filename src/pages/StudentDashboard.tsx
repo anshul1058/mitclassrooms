@@ -345,7 +345,7 @@ const StudentDashboard = () => {
         onOpenChange={(open) => !open && setPreviewFile(null)}
         file={previewFile}
       />
-      {classroom.is_active && <ChatWidget />}
+      {classroom.is_active && classroom.chat_enabled && <ChatWidget />}
     </div>
   );
 };
