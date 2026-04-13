@@ -144,6 +144,19 @@ const TeacherDashboard = () => {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            {classroom.is_active && (
+              <div className="flex items-center gap-2 liquid-glass rounded-xl px-3 py-2">
+                <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">AI Chat</span>
+                <Switch
+                  checked={classroom.chat_enabled}
+                  onCheckedChange={async (checked) => {
+                    await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
+                    toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
+                  }}
+                />
+              </div>
+            )}
             <div className="flex items-center gap-2 liquid-glass rounded-xl px-4 py-2">
               <span className="text-sm text-muted-foreground">Code:</span>
               <span className="font-mono text-xl font-bold tracking-widest">{classroom.code}</span>
