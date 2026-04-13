@@ -41,6 +41,7 @@ export interface ClassroomData {
   teacher_id: string;
   is_active: boolean;
   attendance_marked: boolean;
+  chat_enabled: boolean;
   created_at: string;
   teacher_name: string;
 }

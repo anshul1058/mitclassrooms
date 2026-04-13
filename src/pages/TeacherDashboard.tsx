@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, stopClassroomAction, markAttendanceAction, togglePresenceAction, addQuizAction, shareFileAction, deleteFileAction } from "@/hooks/useClassroomData";
@@ -13,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -143,6 +144,19 @@ const TeacherDashboard = () => {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            {classroom.is_active && (
+              <div className="flex items-center gap-2 liquid-glass rounded-xl px-3 py-2">
+                <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">AI Chat</span>
+                <Switch
+                  checked={classroom.chat_enabled}
+                  onCheckedChange={async (checked) => {
+                    await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
+                    toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
+                  }}
+                />
+              </div>
+            )}
             <div className="flex items-center gap-2 liquid-glass rounded-xl px-4 py-2">
               <span className="text-sm text-muted-foreground">Code:</span>
               <span className="font-mono text-xl font-bold tracking-widest">{classroom.code}</span>

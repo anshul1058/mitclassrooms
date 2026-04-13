@@ -55,6 +55,7 @@ export type Database = {
       classrooms: {
         Row: {
           attendance_marked: boolean
+          chat_enabled: boolean
           code: string
           created_at: string
           id: string
@@ -63,6 +64,7 @@ export type Database = {
         }
         Insert: {
           attendance_marked?: boolean
+          chat_enabled?: boolean
           code: string
           created_at?: string
           id?: string
@@ -71,6 +73,7 @@ export type Database = {
         }
         Update: {
           attendance_marked?: boolean
+          chat_enabled?: boolean
           code?: string
           created_at?: string
           id?: string
