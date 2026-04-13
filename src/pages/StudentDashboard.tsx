@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
+import ChatWidget from "@/components/ChatWidget";
 
 const StudentDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -344,6 +345,7 @@ const StudentDashboard = () => {
         onOpenChange={(open) => !open && setPreviewFile(null)}
         file={previewFile}
       />
+      {classroom.is_active && <ChatWidget />}
     </div>
   );
 };
