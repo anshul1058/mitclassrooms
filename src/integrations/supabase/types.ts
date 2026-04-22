@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      classroom_kicks: {
+        Row: {
+          classroom_id: string
+          id: string
+          kicked_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          classroom_id: string
+          id?: string
+          kicked_at?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          classroom_id?: string
+          id?: string
+          kicked_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_kicks_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classroom_members: {
         Row: {
           classroom_id: string
