@@ -60,6 +60,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          notifications_enabled: boolean
           teacher_id: string
         }
         Insert: {
@@ -69,6 +70,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          notifications_enabled?: boolean
           teacher_id: string
         }
         Update: {
@@ -78,6 +80,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          notifications_enabled?: boolean
           teacher_id?: string
         }
         Relationships: []

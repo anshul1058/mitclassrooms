@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -153,6 +153,23 @@ const TeacherDashboard = () => {
                   onCheckedChange={async (checked) => {
                     await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
                     toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
+                  }}
+                />
+              </div>
+            )}
+            {classroom.is_active && (
+              <div className="flex items-center gap-2 liquid-glass rounded-xl px-3 py-2">
+                {classroom.notifications_enabled ? (
+                  <Bell className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <BellOff className="w-4 h-4 text-muted-foreground" />
+                )}
+                <span className="text-sm text-muted-foreground">Notifications</span>
+                <Switch
+                  checked={classroom.notifications_enabled}
+                  onCheckedChange={async (checked) => {
+                    await supabase.from("classrooms").update({ notifications_enabled: checked }).eq("id", classroom.id);
+                    toast.success(checked ? "Notifications enabled for students" : "Notifications muted for students");
                   }}
                 />
               </div>
