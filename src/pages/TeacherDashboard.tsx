@@ -46,21 +46,31 @@ const TeacherDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading classroom...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground font-medium">Loading classroom...</p>
+        </motion.div>
       </div>
     );
   }
 
   if (!classroom) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">Classroom not found.</p>
-            <Button className="mt-4" onClick={() => navigate("/")}>Go Home</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="max-w-md rounded-2xl border-0 shadow-xl">
+            <CardContent className="pt-6 text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+              <p className="text-muted-foreground">Classroom not found.</p>
+              <Button onClick={() => navigate("/")} className="gap-2">
+                <ArrowLeft className="w-4 h-4" /> Go Home
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
