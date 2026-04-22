@@ -94,7 +94,7 @@ const StudentDashboard = () => {
     ? myMembership.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
     : "ST";
 
-  const showTabWarning = !myMembership.is_tab_active && classroom.is_active && !tabWarningDismissed;
+  const showTabWarning = !myMembership.is_tab_active && classroom.is_active && !tabWarningDismissed && classroom.notifications_enabled;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
