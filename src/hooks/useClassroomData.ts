@@ -249,6 +249,26 @@ export async function stopClassroomAction(classroomId: string) {
 }
 
 export async function markAttendanceAction(classroomId: string) {
+  // Apply 5-minute rule: only students whose joined_at is at least ATTENDANCE_MIN_MINUTES old are marked Present
+  const { data: members } = await supabase
+    .from("classroom_members")
+    .select("id, joined_at")
+    .eq("classroom_id", classroomId);
+
+  const cutoff = Date.now() - ATTENDANCE_MIN_MINUTES * 60 * 1000;
+  const presentIds: string[] = [];
+  const absentIds: string[] = [];
+  (members || []).forEach((m: any) => {
+    if (new Date(m.joined_at).getTime() <= cutoff) presentIds.push(m.id);
+    else absentIds.push(m.id);
+  });
+
+  if (presentIds.length > 0) {
+    await supabase.from("classroom_members").update({ is_present: true }).in("id", presentIds);
+  }
+  if (absentIds.length > 0) {
+    await supabase.from("classroom_members").update({ is_present: false }).in("id", absentIds);
+  }
   await supabase.from("classrooms").update({ attendance_marked: true }).eq("id", classroomId);
 }
 
