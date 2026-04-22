@@ -14,12 +14,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff, ArrowLeft, GraduationCap, Activity
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
+import { motion } from "framer-motion";
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+};
 
 const TeacherDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
@@ -36,21 +46,31 @@ const TeacherDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading classroom...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground font-medium">Loading classroom...</p>
+        </motion.div>
       </div>
     );
   }
 
   if (!classroom) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">Classroom not found.</p>
-            <Button className="mt-4" onClick={() => navigate("/")}>Go Home</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="max-w-md rounded-2xl border-0 shadow-xl">
+            <CardContent className="pt-6 text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+              <p className="text-muted-foreground">Classroom not found.</p>
+              <Button onClick={() => navigate("/")} className="gap-2">
+                <ArrowLeft className="w-4 h-4" /> Go Home
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -127,62 +147,59 @@ const TeacherDashboard = () => {
     });
   };
 
+  const presentCount = members.filter((m) => m.is_present).length;
+  const initials = (classroom.teacher_name || "T")
+    .split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-foreground/5 liquid-glass-subtle">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{classroom.teacher_name}'s Classroom</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant={classroom.is_active ? "default" : "secondary"}>
-                {classroom.is_active ? "Live" : "Ended"}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                {members.length} student{members.length !== 1 ? "s" : ""}
-              </span>
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(230,100%,97%)] to-background dark:from-[hsl(222,47%,8%)] dark:to-background">
+      {/* Header */}
+      <header className="sticky top-0 z-20 backdrop-blur-xl bg-background/60 dark:bg-background/40 border-b border-border/40">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="w-9 h-9 rounded-full bg-card/80 dark:bg-card/50 backdrop-blur-sm border border-border/30 flex items-center justify-center hover:scale-105 transition-transform"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-[hsl(250,80%,60%)] flex items-center justify-center text-primary-foreground font-bold text-sm shadow-md">
+              {initials}
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary hidden sm:inline" />
+                {classroom.teacher_name}'s Classroom
+              </h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                {classroom.is_active ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[hsl(145,60%,42%)]/15 border border-[hsl(145,60%,42%)]/30 text-[10px] font-semibold text-[hsl(145,60%,42%)]">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[hsl(145,60%,42%)] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[hsl(145,60%,42%)]" />
+                    </span>
+                    Live
+                  </span>
+                ) : (
+                  <Badge variant="secondary" className="text-[10px]">Ended</Badge>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {members.length} student{members.length !== 1 ? "s" : ""}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <ThemeToggle />
-            {classroom.is_active && (
-              <div className="flex items-center gap-2 liquid-glass rounded-xl px-3 py-2">
-                <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">AI Chat</span>
-                <Switch
-                  checked={classroom.chat_enabled}
-                  onCheckedChange={async (checked) => {
-                    await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
-                    toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
-                  }}
-                />
-              </div>
-            )}
-            {classroom.is_active && (
-              <div className="flex items-center gap-2 liquid-glass rounded-xl px-3 py-2">
-                {classroom.notifications_enabled ? (
-                  <Bell className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <BellOff className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className="text-sm text-muted-foreground">Notifications</span>
-                <Switch
-                  checked={classroom.notifications_enabled}
-                  onCheckedChange={async (checked) => {
-                    await supabase.from("classrooms").update({ notifications_enabled: checked }).eq("id", classroom.id);
-                    toast.success(checked ? "Notifications enabled for students" : "Notifications muted for students");
-                  }}
-                />
-              </div>
-            )}
-            <div className="flex items-center gap-2 liquid-glass rounded-xl px-4 py-2">
-              <span className="text-sm text-muted-foreground">Code:</span>
-              <span className="font-mono text-xl font-bold tracking-widest">{classroom.code}</span>
-              <Button variant="ghost" size="icon" onClick={copyCode}>
-                <Copy className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2 bg-card/70 dark:bg-card/40 backdrop-blur-sm border border-border/30 shadow-sm">
+              <span className="text-xs text-muted-foreground hidden sm:inline">Code</span>
+              <span className="font-mono text-base font-bold tracking-widest text-primary">{classroom.code}</span>
+              <button onClick={copyCode} className="w-7 h-7 rounded-md hover:bg-muted/50 flex items-center justify-center transition-colors">
+                <Copy className="w-3.5 h-3.5" />
+              </button>
             </div>
             {classroom.is_active && (
-              <Button variant="destructive" size="sm" onClick={handleStopClass} className="gap-1">
+              <Button variant="destructive" size="sm" onClick={handleStopClass} className="gap-1 rounded-xl shadow-md">
                 <Power className="w-4 h-4" /> End Class
               </Button>
             )}
@@ -190,29 +207,147 @@ const TeacherDashboard = () => {
         </div>
       </header>
 
+      {/* Distraction banner */}
       {distracted.length > 0 && classroom.is_active && (
-        <div className="max-w-6xl mx-auto px-4 mt-4">
-          <div className="liquid-glass rounded-xl px-4 py-3 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
-            <p className="text-sm">
-              <span className="font-semibold text-destructive">{distracted.length} student{distracted.length > 1 ? "s" : ""}</span>{" "}
-              switched away from this tab: {distracted.map((s) => s.name).join(", ")}
-            </p>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-6xl mx-auto px-4 mt-4"
+        >
+          <div className="rounded-2xl px-4 py-3 flex items-center gap-3 bg-[hsl(45,100%,90%)] dark:bg-[hsl(45,60%,18%)] border-l-4 border-[hsl(30,96%,49%)] shadow-md">
+            <div className="w-10 h-10 rounded-full bg-[hsl(30,96%,49%)]/15 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-[hsl(30,96%,49%)]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-[hsl(30,60%,25%)] dark:text-[hsl(30,96%,70%)]">
+                {distracted.length} student{distracted.length > 1 ? "s" : ""} distracted
+              </p>
+              <p className="text-xs text-[hsl(30,40%,40%)] dark:text-[hsl(30,40%,60%)] truncate">
+                {distracted.map((s) => s.name).join(", ")}
+              </p>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Stats row */}
+        {classroom.is_active && (
+          <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <motion.div variants={fadeUp}>
+              <Card className="rounded-2xl border border-primary/20 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card/70 dark:bg-card/50 backdrop-blur-sm overflow-hidden group">
+                <CardContent className="pt-5 pb-4 text-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(210,90%,70%)] to-primary flex items-center justify-center mx-auto mb-3 shadow-md shadow-primary/20">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold">{members.length}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Students</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <Card className="rounded-2xl border border-[hsl(145,60%,42%)]/20 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card/70 dark:bg-card/50 backdrop-blur-sm overflow-hidden group">
+                <CardContent className="pt-5 pb-4 text-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(145,60%,42%)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(145,60%,70%)] to-[hsl(145,60%,42%)] flex items-center justify-center mx-auto mb-3 shadow-md shadow-[hsl(145,60%,42%)]/20">
+                      <Check className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold">{presentCount}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Present</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <Card className="rounded-2xl border border-warning/20 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card/70 dark:bg-card/50 backdrop-blur-sm overflow-hidden group">
+                <CardContent className="pt-5 pb-4 text-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(45,100%,65%)] to-warning flex items-center justify-center mx-auto mb-3 shadow-md shadow-warning/20">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold">{distracted.length}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Distracted</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <Card className="rounded-2xl border border-[hsl(250,80%,60%)]/20 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card/70 dark:bg-card/50 backdrop-blur-sm overflow-hidden group">
+                <CardContent className="pt-5 pb-4 text-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(250,80%,60%)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[hsl(270,80%,75%)] to-[hsl(250,80%,60%)] flex items-center justify-center mx-auto mb-3 shadow-md shadow-[hsl(250,80%,60%)]/20">
+                      <Brain className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl font-bold">{quizzes.length}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Quizzes</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Class controls (toggles) */}
+        {classroom.is_active && (
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
+              <CardContent className="pt-5 pb-4 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-3 flex-1 min-w-[220px]">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">AI Chat Assistant</p>
+                    <p className="text-xs text-muted-foreground">{classroom.chat_enabled ? "Available to students" : "Disabled"}</p>
+                  </div>
+                  <Switch
+                    checked={classroom.chat_enabled}
+                    onCheckedChange={async (checked) => {
+                      await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
+                      toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-3 flex-1 min-w-[220px]">
+                  <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                    {classroom.notifications_enabled ? (
+                      <Bell className="w-5 h-5 text-warning" />
+                    ) : (
+                      <BellOff className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">Student Notifications</p>
+                    <p className="text-xs text-muted-foreground">{classroom.notifications_enabled ? "Alerts active" : "Muted for students"}</p>
+                  </div>
+                  <Switch
+                    checked={classroom.notifications_enabled}
+                    onCheckedChange={async (checked) => {
+                      await supabase.from("classrooms").update({ notifications_enabled: checked }).eq("id", classroom.id);
+                      toast.success(checked ? "Notifications enabled for students" : "Notifications muted for students");
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
         <Tabs defaultValue="students">
-          <TabsList className="mb-6">
-            <TabsTrigger value="students" className="gap-1.5"><Users className="w-4 h-4" /> Students</TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-1.5"><ClipboardCheck className="w-4 h-4" /> Attendance</TabsTrigger>
-            <TabsTrigger value="quizzes" className="gap-1.5"><Brain className="w-4 h-4" /> Quizzes</TabsTrigger>
-            <TabsTrigger value="files" className="gap-1.5"><FileText className="w-4 h-4" /> Files</TabsTrigger>
+          <TabsList className="mb-6 bg-card/60 dark:bg-card/40 backdrop-blur-sm border border-border/30 shadow-sm rounded-xl p-1 flex-wrap h-auto">
+            <TabsTrigger value="students" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><Users className="w-4 h-4" /> Students</TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><ClipboardCheck className="w-4 h-4" /> Attendance</TabsTrigger>
+            <TabsTrigger value="quizzes" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><Brain className="w-4 h-4" /> Quizzes</TabsTrigger>
+            <TabsTrigger value="files" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><FileText className="w-4 h-4" /> Files</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Connected Students</CardTitle>
                 <CardDescription>Students who joined with your class code</CardDescription>
@@ -265,7 +400,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="attendance">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Attendance</CardTitle>
@@ -417,7 +552,7 @@ const TeacherDashboard = () => {
               </div>
 
               {quizzes.length === 0 ? (
-                <Card className="liquid-glass rounded-2xl border-0">
+                <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No quizzes yet. Create one to engage your students!
                   </CardContent>
@@ -426,7 +561,7 @@ const TeacherDashboard = () => {
                 quizzes.map((quiz) => {
                   const results = quizResults(quiz.id);
                   return (
-                    <Card key={quiz.id} className="liquid-glass rounded-2xl border-0">
+                    <Card key={quiz.id} className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
                       <CardHeader>
                         <CardTitle className="text-lg">{quiz.title}</CardTitle>
                         <CardDescription>
@@ -470,7 +605,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="files">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Shared Files</CardTitle>
