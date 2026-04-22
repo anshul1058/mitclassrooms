@@ -335,22 +335,30 @@ export async function deleteFileAction(fileId: string, storagePath: string) {
   if (error) toast.error("Failed to delete file: " + error.message);
 }
 
-export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean) {
-  // Use upsert-like approach: update the member's tab status
+export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
   const update: any = { is_tab_active: isActive };
+  let newCount = 0;
   if (!isActive) {
-    // Increment tab switch count - fetch current first
     const { data } = await supabase
       .from("classroom_members")
       .select("tab_switch_count")
       .eq("classroom_id", classroomId)
       .eq("user_id", userId)
       .maybeSingle();
-    if (data) update.tab_switch_count = data.tab_switch_count + 1;
+    if (data) {
+      newCount = data.tab_switch_count + 1;
+      update.tab_switch_count = newCount;
+    }
   }
   await supabase
     .from("classroom_members")
     .update(update)
     .eq("classroom_id", classroomId)
     .eq("user_id", userId);
+
+  if (!isActive && newCount > TAB_SWITCH_LIMIT) {
+    await kickStudentForTabSwitchAction(classroomId, userId);
+    return { kicked: true };
+  }
+  return { kicked: false };
 }
