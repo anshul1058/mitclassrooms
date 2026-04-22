@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
 import { updateTabStatusAction } from "@/hooks/useClassroomData";
 
 let globalPauseUntil = 0;
@@ -8,19 +8,26 @@ export function pauseTabDetection(ms = 3000) {
   globalPauseUntil = Date.now() + ms;
 }
 
-export function useTabDetection(classroomId: string | null, userId: string | null, isClassActive: boolean) {
+export function useTabDetection(
+  classroomId: string | null,
+  userId: string | null,
+  isClassActive: boolean,
+  onKicked?: () => void,
+) {
   useEffect(() => {
     if (!classroomId || !userId || !isClassActive) return;
 
     const isPaused = () => Date.now() < globalPauseUntil;
 
-    const handleVisibility = () => {
+    const report = async (active: boolean) => {
       if (isPaused()) return;
-      updateTabStatusAction(classroomId, userId, !document.hidden);
+      const res = await updateTabStatusAction(classroomId, userId, active);
+      if (res.kicked && onKicked) onKicked();
     };
 
-    const handleBlur = () => { if (!isPaused()) updateTabStatusAction(classroomId, userId, false); };
-    const handleFocus = () => { if (!isPaused()) updateTabStatusAction(classroomId, userId, true); };
+    const handleVisibility = () => report(!document.hidden);
+    const handleBlur = () => report(false);
+    const handleFocus = () => report(true);
 
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("blur", handleBlur);
@@ -31,5 +38,5 @@ export function useTabDetection(classroomId: string | null, userId: string | nul
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [classroomId, userId, isClassActive]);
+  }, [classroomId, userId, isClassActive, onKicked]);
 }
