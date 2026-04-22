@@ -347,7 +347,7 @@ const TeacherDashboard = () => {
           </TabsList>
 
           <TabsContent value="students">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Connected Students</CardTitle>
                 <CardDescription>Students who joined with your class code</CardDescription>
@@ -400,7 +400,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="attendance">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Attendance</CardTitle>
@@ -552,7 +552,7 @@ const TeacherDashboard = () => {
               </div>
 
               {quizzes.length === 0 ? (
-                <Card className="liquid-glass rounded-2xl border-0">
+                <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No quizzes yet. Create one to engage your students!
                   </CardContent>
@@ -561,7 +561,7 @@ const TeacherDashboard = () => {
                 quizzes.map((quiz) => {
                   const results = quizResults(quiz.id);
                   return (
-                    <Card key={quiz.id} className="liquid-glass rounded-2xl border-0">
+                    <Card key={quiz.id} className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
                       <CardHeader>
                         <CardTitle className="text-lg">{quiz.title}</CardTitle>
                         <CardDescription>
@@ -605,7 +605,7 @@ const TeacherDashboard = () => {
           </TabsContent>
 
           <TabsContent value="files">
-            <Card className="liquid-glass rounded-2xl border-0">
+            <Card className="rounded-2xl border-0 shadow-md bg-card/70 dark:bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Shared Files</CardTitle>
