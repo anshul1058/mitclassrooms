@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
 import { motion } from "framer-motion";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 const container = {
   hidden: {},
