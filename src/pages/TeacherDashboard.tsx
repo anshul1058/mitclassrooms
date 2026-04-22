@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { useParams, useNavigate } from "react-router-dom";
@@ -14,12 +14,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff, ArrowLeft, GraduationCap, Activity
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
+import { motion } from "framer-motion";
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+};
 
 const TeacherDashboard = () => {
   const { classroomId } = useParams<{ classroomId: string }>();
