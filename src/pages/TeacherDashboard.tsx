@@ -339,11 +339,11 @@ const TeacherDashboard = () => {
           </motion.div>
         )}
         <Tabs defaultValue="students">
-          <TabsList className="mb-6">
-            <TabsTrigger value="students" className="gap-1.5"><Users className="w-4 h-4" /> Students</TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-1.5"><ClipboardCheck className="w-4 h-4" /> Attendance</TabsTrigger>
-            <TabsTrigger value="quizzes" className="gap-1.5"><Brain className="w-4 h-4" /> Quizzes</TabsTrigger>
-            <TabsTrigger value="files" className="gap-1.5"><FileText className="w-4 h-4" /> Files</TabsTrigger>
+          <TabsList className="mb-6 bg-card/60 dark:bg-card/40 backdrop-blur-sm border border-border/30 shadow-sm rounded-xl p-1 flex-wrap h-auto">
+            <TabsTrigger value="students" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><Users className="w-4 h-4" /> Students</TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><ClipboardCheck className="w-4 h-4" /> Attendance</TabsTrigger>
+            <TabsTrigger value="quizzes" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><Brain className="w-4 h-4" /> Quizzes</TabsTrigger>
+            <TabsTrigger value="files" className="gap-1.5 rounded-lg data-[state=active]:shadow-md"><FileText className="w-4 h-4" /> Files</TabsTrigger>
           </TabsList>
 
           <TabsContent value="students">
