@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, submitAnswerAction } from "@/hooks/useClassroomData";
 import { useTabDetection } from "@/hooks/useTabDetection";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ const StudentDashboard = () => {
     toast.error("You were removed for switching tabs more than 5 times.");
     setTimeout(() => navigate("/"), 1500);
   });
+  useWakeLock(classroom?.is_active ?? false);
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());

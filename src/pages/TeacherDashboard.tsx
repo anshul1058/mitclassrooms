@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
 import { motion } from "framer-motion";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 const container = {
   hidden: {},
@@ -36,6 +37,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { classroom, members, quizzes, quizAnswers, sharedFiles, loading } = useClassroomData(classroomId);
+  useWakeLock(classroom?.is_active ?? false);
 
   const [quizTitle, setQuizTitle] = useState("");
   const [questions, setQuestions] = useState<{ question: string; options: string[]; correctIndex: number }[]>([
