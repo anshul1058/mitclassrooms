@@ -181,6 +181,9 @@ export async function createClassroomAction(teacherId: string): Promise<string |
   return data.id;
 }
 
+export const TAB_SWITCH_LIMIT = 5;
+export const ATTENDANCE_MIN_MINUTES = 5;
+
 export async function joinClassroomAction(code: string, userId: string): Promise<string | null> {
   const { data: classroom, error: findErr } = await supabase
     .from("classrooms")
@@ -191,6 +194,19 @@ export async function joinClassroomAction(code: string, userId: string): Promise
 
   if (findErr || !classroom) {
     toast.error("Invalid or expired class code");
+    return null;
+  }
+
+  // Block kicked students from rejoining
+  const { data: kick } = await supabase
+    .from("classroom_kicks")
+    .select("id")
+    .eq("classroom_id", classroom.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (kick) {
+    toast.error("You were removed from this class for switching tabs too many times and cannot rejoin.");
     return null;
   }
 
@@ -215,11 +231,44 @@ export async function joinClassroomAction(code: string, userId: string): Promise
   return classroom.id;
 }
 
+export async function kickStudentForTabSwitchAction(classroomId: string, userId: string) {
+  // Record kick (idempotent due to UNIQUE constraint)
+  await supabase
+    .from("classroom_kicks")
+    .insert({ classroom_id: classroomId, user_id: userId, reason: "tab_switch_limit" });
+  // Remove from members
+  await supabase
+    .from("classroom_members")
+    .delete()
+    .eq("classroom_id", classroomId)
+    .eq("user_id", userId);
+}
+
 export async function stopClassroomAction(classroomId: string) {
   await supabase.from("classrooms").update({ is_active: false }).eq("id", classroomId);
 }
 
 export async function markAttendanceAction(classroomId: string) {
+  // Apply 5-minute rule: only students whose joined_at is at least ATTENDANCE_MIN_MINUTES old are marked Present
+  const { data: members } = await supabase
+    .from("classroom_members")
+    .select("id, joined_at")
+    .eq("classroom_id", classroomId);
+
+  const cutoff = Date.now() - ATTENDANCE_MIN_MINUTES * 60 * 1000;
+  const presentIds: string[] = [];
+  const absentIds: string[] = [];
+  (members || []).forEach((m: any) => {
+    if (new Date(m.joined_at).getTime() <= cutoff) presentIds.push(m.id);
+    else absentIds.push(m.id);
+  });
+
+  if (presentIds.length > 0) {
+    await supabase.from("classroom_members").update({ is_present: true }).in("id", presentIds);
+  }
+  if (absentIds.length > 0) {
+    await supabase.from("classroom_members").update({ is_present: false }).in("id", absentIds);
+  }
   await supabase.from("classrooms").update({ attendance_marked: true }).eq("id", classroomId);
 }
 
@@ -286,22 +335,30 @@ export async function deleteFileAction(fileId: string, storagePath: string) {
   if (error) toast.error("Failed to delete file: " + error.message);
 }
 
-export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean) {
-  // Use upsert-like approach: update the member's tab status
+export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
   const update: any = { is_tab_active: isActive };
+  let newCount = 0;
   if (!isActive) {
-    // Increment tab switch count - fetch current first
     const { data } = await supabase
       .from("classroom_members")
       .select("tab_switch_count")
       .eq("classroom_id", classroomId)
       .eq("user_id", userId)
       .maybeSingle();
-    if (data) update.tab_switch_count = data.tab_switch_count + 1;
+    if (data) {
+      newCount = data.tab_switch_count + 1;
+      update.tab_switch_count = newCount;
+    }
   }
   await supabase
     .from("classroom_members")
     .update(update)
     .eq("classroom_id", classroomId)
     .eq("user_id", userId);
+
+  if (!isActive && newCount > TAB_SWITCH_LIMIT) {
+    await kickStudentForTabSwitchAction(classroomId, userId);
+    return { kicked: true };
+  }
+  return { kicked: false };
 }

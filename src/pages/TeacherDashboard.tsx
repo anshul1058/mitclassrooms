@@ -404,7 +404,7 @@ const TeacherDashboard = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Attendance</CardTitle>
-                  <CardDescription>Mark each student as Present (P) or Absent (A), then finalize</CardDescription>
+                  <CardDescription>Auto-rule: students who joined ≥ 5 minutes ago are marked Present. You can override below.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

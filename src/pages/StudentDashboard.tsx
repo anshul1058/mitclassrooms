@@ -11,6 +11,7 @@ import {
   FileText, Brain, CheckCircle2, AlertTriangle, ArrowLeft,
   Eye, EyeOff, Award, Zap, BookOpen, Download, RefreshCw, X,
 } from "lucide-react";
+import { toast } from "sonner";
 import ThemeToggle from "@/components/ThemeToggle";
 import FilePreviewDialog from "@/components/FilePreviewDialog";
 import ChatWidget from "@/components/ChatWidget";
@@ -33,7 +34,10 @@ const StudentDashboard = () => {
 
   const myMembership = members.find((m) => m.user_id === user?.id);
 
-  useTabDetection(classroomId || null, user?.id || null, classroom?.is_active ?? false);
+  useTabDetection(classroomId || null, user?.id || null, classroom?.is_active ?? false, () => {
+    toast.error("You were removed for switching tabs more than 5 times.");
+    setTimeout(() => navigate("/"), 1500);
+  });
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
