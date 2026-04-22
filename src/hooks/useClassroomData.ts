@@ -181,6 +181,9 @@ export async function createClassroomAction(teacherId: string): Promise<string |
   return data.id;
 }
 
+export const TAB_SWITCH_LIMIT = 5;
+export const ATTENDANCE_MIN_MINUTES = 5;
+
 export async function joinClassroomAction(code: string, userId: string): Promise<string | null> {
   const { data: classroom, error: findErr } = await supabase
     .from("classrooms")
@@ -191,6 +194,19 @@ export async function joinClassroomAction(code: string, userId: string): Promise
 
   if (findErr || !classroom) {
     toast.error("Invalid or expired class code");
+    return null;
+  }
+
+  // Block kicked students from rejoining
+  const { data: kick } = await supabase
+    .from("classroom_kicks")
+    .select("id")
+    .eq("classroom_id", classroom.id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (kick) {
+    toast.error("You were removed from this class for switching tabs too many times and cannot rejoin.");
     return null;
   }
 
@@ -213,6 +229,19 @@ export async function joinClassroomAction(code: string, userId: string): Promise
     return null;
   }
   return classroom.id;
+}
+
+export async function kickStudentForTabSwitchAction(classroomId: string, userId: string) {
+  // Record kick (idempotent due to UNIQUE constraint)
+  await supabase
+    .from("classroom_kicks")
+    .insert({ classroom_id: classroomId, user_id: userId, reason: "tab_switch_limit" });
+  // Remove from members
+  await supabase
+    .from("classroom_members")
+    .delete()
+    .eq("classroom_id", classroomId)
+    .eq("user_id", userId);
 }
 
 export async function stopClassroomAction(classroomId: string) {
