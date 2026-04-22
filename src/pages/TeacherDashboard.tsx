@@ -37,6 +37,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { classroom, members, quizzes, quizAnswers, sharedFiles, loading } = useClassroomData(classroomId);
+  useWakeLock(classroom?.is_active ?? false);
 
   const [quizTitle, setQuizTitle] = useState("");
   const [questions, setQuestions] = useState<{ question: string; options: string[]; correctIndex: number }[]>([
