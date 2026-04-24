@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, submitAnswerAction } from "@/hooks/useClassroomData";
 import { useTabDetection } from "@/hooks/useTabDetection";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useBrowserNotifications, fireBrowserNotification } from "@/hooks/useBrowserNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +41,36 @@ const StudentDashboard = () => {
     setTimeout(() => navigate("/"), 1500);
   });
   useWakeLock(classroom?.is_active ?? false);
+  useBrowserNotifications(!!classroom?.notifications_enabled && (classroom?.is_active ?? false));
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
   const [previewFile, setPreviewFile] = useState<{ name: string; url: string } | null>(null);
   const [tabWarningDismissed, setTabWarningDismissed] = useState(false);
+
+  // Fire OS-level notification when student leaves the tab (if teacher enabled it)
+  const prevActiveRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!myMembership || !classroom) return;
+    const wasActive = prevActiveRef.current;
+    const isActive = myMembership.is_tab_active;
+    if (
+      wasActive === true &&
+      isActive === false &&
+      classroom.notifications_enabled &&
+      classroom.is_active
+    ) {
+      const remaining = Math.max(0, 5 - myMembership.tab_switch_count);
+      fireBrowserNotification(
+        "Return to class — ClassPulse",
+        remaining > 0
+          ? `You left the class tab. ${remaining} switch${remaining === 1 ? "" : "es"} left before removal.`
+          : "You will be removed if you switch tabs again.",
+      );
+    }
+    prevActiveRef.current = isActive;
+  }, [myMembership?.is_tab_active, myMembership?.tab_switch_count, classroom?.notifications_enabled, classroom?.is_active]);
+
 
   const quizStats = useMemo(() => {
     if (!user) return { total: 0, answered: 0, correct: 0 };
