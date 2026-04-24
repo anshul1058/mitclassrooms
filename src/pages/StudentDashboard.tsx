@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClassroomData, submitAnswerAction } from "@/hooks/useClassroomData";
 import { useTabDetection } from "@/hooks/useTabDetection";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useBrowserNotifications, fireBrowserNotification } from "@/hooks/useBrowserNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
