@@ -325,8 +325,8 @@ const TeacherDashboard = () => {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold">Student Notifications</p>
-                    <p className="text-xs text-muted-foreground">{classroom.notifications_enabled ? "Alerts active" : "Muted for students"}</p>
+                    <p className="text-sm font-semibold">Distraction Alerts</p>
+                    <p className="text-xs text-muted-foreground">{classroom.notifications_enabled ? "In-app + browser alerts on tab switch" : "Silent — no warnings shown"}</p>
                   </div>
                   <Switch
                     checked={classroom.notifications_enabled}
