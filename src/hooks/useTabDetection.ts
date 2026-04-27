@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { updateTabStatusAction } from "@/hooks/useClassroomData";
 
 let globalPauseUntil = 0;
@@ -14,6 +14,9 @@ export function useTabDetection(
   isClassActive: boolean,
   onKicked?: () => void,
 ) {
+  const lastActiveRef = useRef<boolean>(true);
+  const lastReportAtRef = useRef<number>(0);
+
   useEffect(() => {
     if (!classroomId || !userId || !isClassActive) return;
 
@@ -21,6 +24,16 @@ export function useTabDetection(
 
     const report = async (active: boolean) => {
       if (isPaused()) return;
+      // Dedupe: ignore if state didn't change, or if a duplicate event fires
+      // within a short window (visibilitychange + blur often fire together).
+      const now = Date.now();
+      if (active === lastActiveRef.current) return;
+      if (now - lastReportAtRef.current < 800) {
+        lastActiveRef.current = active;
+        return;
+      }
+      lastActiveRef.current = active;
+      lastReportAtRef.current = now;
       const res = await updateTabStatusAction(classroomId, userId, active);
       if (res.kicked && onKicked) onKicked();
     };
@@ -28,6 +41,9 @@ export function useTabDetection(
     const handleVisibility = () => report(!document.hidden);
     const handleBlur = () => report(false);
     const handleFocus = () => report(true);
+
+    // Initialize with current state to avoid spurious initial reports
+    lastActiveRef.current = !document.hidden;
 
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("blur", handleBlur);
