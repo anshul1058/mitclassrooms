@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, Bell, BellOff, ArrowLeft, GraduationCap, Activity
+  Copy, Users, ClipboardCheck, FileText, Brain, Power, Plus, Trash2, Check, X, AlertTriangle, Eye, EyeOff, Download, MessageCircle, ArrowLeft, GraduationCap, Activity
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
@@ -313,26 +313,6 @@ const TeacherDashboard = () => {
                     onCheckedChange={async (checked) => {
                       await supabase.from("classrooms").update({ chat_enabled: checked }).eq("id", classroom.id);
                       toast.success(checked ? "AI Chat enabled for students" : "AI Chat disabled for students");
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-3 flex-1 min-w-[220px]">
-                  <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
-                    {classroom.notifications_enabled ? (
-                      <Bell className="w-5 h-5 text-warning" />
-                    ) : (
-                      <BellOff className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold">Distraction Alerts</p>
-                    <p className="text-xs text-muted-foreground">{classroom.notifications_enabled ? "In-app + browser alerts on tab switch" : "Silent — no warnings shown"}</p>
-                  </div>
-                  <Switch
-                    checked={classroom.notifications_enabled}
-                    onCheckedChange={async (checked) => {
-                      await supabase.from("classrooms").update({ notifications_enabled: checked }).eq("id", classroom.id);
-                      toast.success(checked ? "Notifications enabled for students" : "Notifications muted for students");
                     }}
                   />
                 </div>
