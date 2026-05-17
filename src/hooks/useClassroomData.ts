@@ -203,12 +203,8 @@ export const TAB_SWITCH_LIMIT = 5;
 export const ATTENDANCE_MIN_MINUTES = 5;
 
 export async function joinClassroomAction(code: string, userId: string): Promise<string | null> {
-  const { data: classroom, error: findErr } = await supabase
-    .from("classrooms")
-    .select("id, is_active")
-    .eq("code", code)
-    .eq("is_active", true)
-    .maybeSingle();
+  const { data: found, error: findErr } = await supabase.rpc("find_classroom_by_code", { p_code: code });
+  const classroom = Array.isArray(found) ? found[0] : found;
 
   if (findErr || !classroom) {
     toast.error("Invalid or expired class code");
