@@ -76,16 +76,24 @@ export function useClassroomData(classroomId: string | undefined) {
     }
 
     if (membersRes.data) {
-      // Fetch names for all members
       const userIds = membersRes.data.map((m: any) => m.user_id);
-      const profilesRes = await supabase.from("profiles").select("user_id, name, prn").in("user_id", userIds);
+      const profilesRes = await supabase.from("profiles").select("user_id, name").in("user_id", userIds);
       const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p]));
+
+      // Fetch PRNs individually via the security-definer RPC (returns null when not permitted)
+      const prnEntries = await Promise.all(
+        userIds.map(async (uid: string) => {
+          const { data } = await supabase.rpc("get_student_prn", { p_user_id: uid });
+          return [uid, (data as string | null) ?? null] as const;
+        })
+      );
+      const prnMap = new Map(prnEntries);
 
       setMembers(
         membersRes.data.map((m: any) => ({
           ...m,
           name: (profileMap.get(m.user_id) as any)?.name || "Unknown",
-          prn: (profileMap.get(m.user_id) as any)?.prn || null,
+          prn: prnMap.get(m.user_id) ?? null,
         }))
       );
     }
@@ -94,8 +102,18 @@ export function useClassroomData(classroomId: string | undefined) {
       const quizIds = quizzesRes.data.map((q: any) => q.id);
       let questions: any[] = [];
       if (quizIds.length > 0) {
+        // Try teacher view first (includes correct_index); fall back to public view for students
         const qRes = await supabase.from("quiz_questions").select("*").in("quiz_id", quizIds).order("sort_order");
-        questions = qRes.data || [];
+        if (qRes.data && qRes.data.length > 0) {
+          questions = qRes.data;
+        } else {
+          const qPubRes = await supabase
+            .from("quiz_questions_public" as any)
+            .select("*")
+            .in("quiz_id", quizIds)
+            .order("sort_order");
+          questions = (qPubRes.data as any[]) || [];
+        }
       }
 
       // Fetch answers for these quizzes
@@ -118,7 +136,7 @@ export function useClassroomData(classroomId: string | undefined) {
               id: qq.id,
               question: qq.question,
               options: Array.isArray(qq.options) ? qq.options : JSON.parse(qq.options || "[]"),
-              correct_index: qq.correct_index,
+              correct_index: qq.correct_index ?? -1,
             })),
         }))
       );
