@@ -76,16 +76,24 @@ export function useClassroomData(classroomId: string | undefined) {
     }
 
     if (membersRes.data) {
-      // Fetch names for all members
       const userIds = membersRes.data.map((m: any) => m.user_id);
-      const profilesRes = await supabase.from("profiles").select("user_id, name, prn").in("user_id", userIds);
+      const profilesRes = await supabase.from("profiles").select("user_id, name").in("user_id", userIds);
       const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p]));
+
+      // Fetch PRNs individually via the security-definer RPC (returns null when not permitted)
+      const prnEntries = await Promise.all(
+        userIds.map(async (uid: string) => {
+          const { data } = await supabase.rpc("get_student_prn", { p_user_id: uid });
+          return [uid, (data as string | null) ?? null] as const;
+        })
+      );
+      const prnMap = new Map(prnEntries);
 
       setMembers(
         membersRes.data.map((m: any) => ({
           ...m,
           name: (profileMap.get(m.user_id) as any)?.name || "Unknown",
-          prn: (profileMap.get(m.user_id) as any)?.prn || null,
+          prn: prnMap.get(m.user_id) ?? null,
         }))
       );
     }
@@ -94,8 +102,18 @@ export function useClassroomData(classroomId: string | undefined) {
       const quizIds = quizzesRes.data.map((q: any) => q.id);
       let questions: any[] = [];
       if (quizIds.length > 0) {
+        // Try teacher view first (includes correct_index); fall back to public view for students
         const qRes = await supabase.from("quiz_questions").select("*").in("quiz_id", quizIds).order("sort_order");
-        questions = qRes.data || [];
+        if (qRes.data && qRes.data.length > 0) {
+          questions = qRes.data;
+        } else {
+          const qPubRes = await supabase
+            .from("quiz_questions_public" as any)
+            .select("*")
+            .in("quiz_id", quizIds)
+            .order("sort_order");
+          questions = (qPubRes.data as any[]) || [];
+        }
       }
 
       // Fetch answers for these quizzes
@@ -118,7 +136,7 @@ export function useClassroomData(classroomId: string | undefined) {
               id: qq.id,
               question: qq.question,
               options: Array.isArray(qq.options) ? qq.options : JSON.parse(qq.options || "[]"),
-              correct_index: qq.correct_index,
+              correct_index: qq.correct_index ?? -1,
             })),
         }))
       );
@@ -185,12 +203,8 @@ export const TAB_SWITCH_LIMIT = 5;
 export const ATTENDANCE_MIN_MINUTES = 5;
 
 export async function joinClassroomAction(code: string, userId: string): Promise<string | null> {
-  const { data: classroom, error: findErr } = await supabase
-    .from("classrooms")
-    .select("id, is_active")
-    .eq("code", code)
-    .eq("is_active", true)
-    .maybeSingle();
+  const { data: found, error: findErr } = await supabase.rpc("find_classroom_by_code", { p_code: code });
+  const classroom = Array.isArray(found) ? found[0] : found;
 
   if (findErr || !classroom) {
     toast.error("Invalid or expired class code");
@@ -300,12 +314,13 @@ export async function addQuizAction(
   await supabase.from("quiz_questions").insert(questionRows);
 }
 
-export async function submitAnswerAction(questionId: string, studentId: string, selectedIndex: number, correctIndex: number) {
+export async function submitAnswerAction(questionId: string, studentId: string, selectedIndex: number, _correctIndex?: number) {
+  // is_correct is computed server-side by a trigger so students never need correct_index.
   const { error } = await supabase.from("quiz_answers").insert({
     question_id: questionId,
     student_id: studentId,
     selected_index: selectedIndex,
-    is_correct: selectedIndex === correctIndex,
+    is_correct: false,
   });
   if (error) toast.error("Failed to submit answer: " + error.message);
 }
@@ -335,30 +350,12 @@ export async function deleteFileAction(fileId: string, storagePath: string) {
   if (error) toast.error("Failed to delete file: " + error.message);
 }
 
-export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
-  const update: any = { is_tab_active: isActive };
-  let newCount = 0;
-  if (!isActive) {
-    const { data } = await supabase
-      .from("classroom_members")
-      .select("tab_switch_count")
-      .eq("classroom_id", classroomId)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (data) {
-      newCount = data.tab_switch_count + 1;
-      update.tab_switch_count = newCount;
-    }
-  }
-  await supabase
-    .from("classroom_members")
-    .update(update)
-    .eq("classroom_id", classroomId)
-    .eq("user_id", userId);
-
-  if (!isActive && newCount > TAB_SWITCH_LIMIT) {
-    await kickStudentForTabSwitchAction(classroomId, userId);
-    return { kicked: true };
-  }
-  return { kicked: false };
+export async function updateTabStatusAction(classroomId: string, _userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
+  const { data, error } = await supabase.rpc("report_tab_status", {
+    p_classroom_id: classroomId,
+    p_is_active: isActive,
+  });
+  if (error) return { kicked: false };
+  const kicked = !!(data as any)?.kicked;
+  return { kicked };
 }

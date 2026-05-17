@@ -122,21 +122,18 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          prn: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          prn?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          prn?: string | null
           user_id?: string
         }
         Relationships: []
@@ -172,6 +169,13 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -275,6 +279,24 @@ export type Database = {
           },
         ]
       }
+      student_prns: {
+        Row: {
+          created_at: string
+          prn: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          prn: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          prn?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -295,13 +317,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      quiz_questions_public: {
+        Row: {
+          id: string | null
+          options: Json | null
+          question: string | null
+          quiz_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          id?: string | null
+          options?: Json | null
+          question?: string | null
+          quiz_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          id?: string | null
+          options?: Json | null
+          question?: string | null
+          quiz_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_classroom: {
         Args: { _classroom_id: string; _user_id: string }
         Returns: boolean
       }
+      find_classroom_by_code: {
+        Args: { p_code: string }
+        Returns: {
+          id: string
+          is_active: boolean
+        }[]
+      }
+      get_student_prn: { Args: { p_user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -316,6 +377,10 @@ export type Database = {
       is_classroom_teacher: {
         Args: { _classroom_id: string; _user_id: string }
         Returns: boolean
+      }
+      report_tab_status: {
+        Args: { p_classroom_id: string; p_is_active: boolean }
+        Returns: Json
       }
     }
     Enums: {
