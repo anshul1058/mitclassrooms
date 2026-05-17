@@ -314,12 +314,13 @@ export async function addQuizAction(
   await supabase.from("quiz_questions").insert(questionRows);
 }
 
-export async function submitAnswerAction(questionId: string, studentId: string, selectedIndex: number, correctIndex: number) {
+export async function submitAnswerAction(questionId: string, studentId: string, selectedIndex: number, _correctIndex?: number) {
+  // is_correct is computed server-side by a trigger so students never need correct_index.
   const { error } = await supabase.from("quiz_answers").insert({
     question_id: questionId,
     student_id: studentId,
     selected_index: selectedIndex,
-    is_correct: selectedIndex === correctIndex,
+    is_correct: false,
   });
   if (error) toast.error("Failed to submit answer: " + error.message);
 }
@@ -349,30 +350,12 @@ export async function deleteFileAction(fileId: string, storagePath: string) {
   if (error) toast.error("Failed to delete file: " + error.message);
 }
 
-export async function updateTabStatusAction(classroomId: string, userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
-  const update: any = { is_tab_active: isActive };
-  let newCount = 0;
-  if (!isActive) {
-    const { data } = await supabase
-      .from("classroom_members")
-      .select("tab_switch_count")
-      .eq("classroom_id", classroomId)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (data) {
-      newCount = data.tab_switch_count + 1;
-      update.tab_switch_count = newCount;
-    }
-  }
-  await supabase
-    .from("classroom_members")
-    .update(update)
-    .eq("classroom_id", classroomId)
-    .eq("user_id", userId);
-
-  if (!isActive && newCount > TAB_SWITCH_LIMIT) {
-    await kickStudentForTabSwitchAction(classroomId, userId);
-    return { kicked: true };
-  }
-  return { kicked: false };
+export async function updateTabStatusAction(classroomId: string, _userId: string, isActive: boolean): Promise<{ kicked: boolean }> {
+  const { data, error } = await supabase.rpc("report_tab_status", {
+    p_classroom_id: classroomId,
+    p_is_active: isActive,
+  });
+  if (error) return { kicked: false };
+  const kicked = !!(data as any)?.kicked;
+  return { kicked };
 }
