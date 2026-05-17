@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: "teacher" | "student" | null;
-  profile: { name: string; prn: string | null } | null;
+  profile: { name: string; prn?: string | null } | null;
   signUp: (email: string, password: string, metadata: { name: string; role: string; prn?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -20,15 +20,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<"teacher" | "student" | null>(null);
-  const [profile, setProfile] = useState<{ name: string; prn: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ name: string; prn?: string | null } | null>(null);
 
   const fetchUserData = async (userId: string) => {
-    const [roleRes, profileRes] = await Promise.all([
+    const [roleRes, profileRes, prnRes] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("profiles").select("name, prn").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("name").eq("user_id", userId).maybeSingle(),
+      supabase.from("student_prns").select("prn").eq("user_id", userId).maybeSingle(),
     ]);
     if (roleRes.data) setRole(roleRes.data.role as "teacher" | "student");
-    if (profileRes.data) setProfile(profileRes.data);
+    if (profileRes.data) setProfile({ name: profileRes.data.name, prn: prnRes.data?.prn ?? null });
   };
 
   useEffect(() => {
