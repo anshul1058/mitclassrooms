@@ -11,11 +11,13 @@ type Msg = { role: "user" | "assistant"; content: string };
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/classroom-chat`;
 
 async function streamChat({
+  classroomId,
   messages,
   onDelta,
   onDone,
   onError,
 }: {
+  classroomId: string;
   messages: Msg[];
   onDelta: (t: string) => void;
   onDone: () => void;
@@ -33,7 +35,7 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ classroomId, messages }),
   });
 
   if (!resp.ok) {
