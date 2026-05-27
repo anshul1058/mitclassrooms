@@ -362,6 +362,17 @@ export type Database = {
           is_active: boolean
         }[]
       }
+      get_quiz_questions_for_teacher: {
+        Args: { p_quiz_id: string }
+        Returns: {
+          correct_index: number
+          id: string
+          options: Json
+          question: string
+          quiz_id: string
+          sort_order: number
+        }[]
+      }
       get_student_prn: { Args: { p_user_id: string }; Returns: string }
       has_role: {
         Args: {
