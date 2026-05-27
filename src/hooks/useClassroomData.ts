@@ -100,13 +100,17 @@ export function useClassroomData(classroomId: string | undefined) {
 
     if (quizzesRes.data) {
       const quizIds = quizzesRes.data.map((q: any) => q.id);
+      const isTeacher = classroomRes.data?.teacher_id === user.id;
       let questions: any[] = [];
       if (quizIds.length > 0) {
-        // Try teacher view first (includes correct_index); fall back to public view for students
-        const qRes = await supabase.from("quiz_questions").select("*").in("quiz_id", quizIds).order("sort_order");
-        if (qRes.data && qRes.data.length > 0) {
-          questions = qRes.data;
+        if (isTeacher) {
+          // Teacher: fetch via RPC that includes correct_index
+          const results = await Promise.all(
+            quizIds.map((qid: string) => supabase.rpc("get_quiz_questions_for_teacher", { p_quiz_id: qid }))
+          );
+          questions = results.flatMap((r: any) => (r.data as any[]) || []);
         } else {
+          // Student: use public view without correct_index
           const qPubRes = await supabase
             .from("quiz_questions_public" as any)
             .select("*")
