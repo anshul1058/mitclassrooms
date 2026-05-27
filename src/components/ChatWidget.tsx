@@ -117,6 +117,7 @@ const ChatWidget = ({ classroomId }: { classroomId: string }) => {
 
     try {
       await streamChat({
+        classroomId,
         messages: [...messages, userMsg],
         onDelta: upsert,
         onDone: () => setLoading(false),
