@@ -42,6 +42,30 @@ serve(async (req) => {
       });
     }
 
+    if (messages.length === 0 || messages.length > 50) {
+      return new Response(JSON.stringify({ error: "Message count out of range (1-50)" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let totalChars = 0;
+    for (const m of messages) {
+      const c = typeof m?.content === "string" ? m.content : "";
+      if (c.length > 4000) {
+        return new Response(JSON.stringify({ error: "Individual message too long (max 4000 chars)" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      totalChars += c.length;
+    }
+    if (totalChars > 20000) {
+      return new Response(JSON.stringify({ error: "Conversation too long (max 20000 chars)" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify classroom exists, chat is enabled, and user is a member or teacher
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: classroom, error: cErr } = await admin
