@@ -11,7 +11,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Authenticate user via JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -20,22 +19,64 @@ serve(async (req) => {
       });
     }
     const token = authHeader.replace("Bearer ", "");
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-    );
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(supabaseUrl, anonKey);
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
     if (userErr || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = userData.user.id;
 
-    const { messages } = await req.json();
-    if (!Array.isArray(messages)) {
+    const { messages, classroomId } = await req.json();
+    if (!Array.isArray(messages) || typeof classroomId !== "string") {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify classroom exists, chat is enabled, and user is a member or teacher
+    const admin = createClient(supabaseUrl, serviceKey);
+    const { data: classroom, error: cErr } = await admin
+      .from("classrooms")
+      .select("id, chat_enabled, is_active, teacher_id")
+      .eq("id", classroomId)
+      .maybeSingle();
+
+    if (cErr || !classroom) {
+      return new Response(JSON.stringify({ error: "Classroom not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!classroom.is_active || !classroom.chat_enabled) {
+      return new Response(JSON.stringify({ error: "AI chat is disabled for this classroom" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const isTeacher = classroom.teacher_id === userId;
+    let isMember = isTeacher;
+    if (!isMember) {
+      const { data: member } = await admin
+        .from("classroom_members")
+        .select("id")
+        .eq("classroom_id", classroomId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      isMember = !!member;
+    }
+    if (!isMember) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

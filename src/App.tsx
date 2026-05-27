@@ -10,6 +10,7 @@ import ResetPassword from "./pages/ResetPassword";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -24,8 +25,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/teacher/:classroomId" element={<TeacherDashboard />} />
-            <Route path="/student/:classroomId" element={<StudentDashboard />} />
+            <Route path="/teacher/:classroomId" element={<ProtectedRoute requiredRole="teacher"><TeacherDashboard /></ProtectedRoute>} />
+            <Route path="/student/:classroomId" element={<ProtectedRoute requiredRole="student"><StudentDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
