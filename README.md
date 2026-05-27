@@ -1,73 +1,86 @@
-# Welcome to your Lovable project
+# MIT AOE Classrooms
 
-## Project info
+![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3-38B2AC?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-2-3ECF8E?logo=supabase&logoColor=white)
 
-**URL**: (https://mitclassrooms.lovable.app)
+**MIT AOE Classrooms** is a modern classroom focus platform for MIT Academy of Engineering. Create live classroom sessions, share a join code, mark attendance, run quizzes, share learning materials, and detect tab-switching — all without cameras or video calls.
 
-## How can I edit this code?
+**Live Demo:** https://mitclassrooms.lovable.app
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## ✨ Highlights
 
-Simply visit the [Lovable Project]((https://mitclassrooms.lovable.app)) and start prompting.
+- **Live classroom sessions** with shareable join codes
+- **Attendance in one click** with real-time presence tracking
+- **MCQ quizzes** delivered instantly to students
+- **Material sharing** for PDFs, docs, images, and slides
+- **Tab activity detection** to reduce distractions
+- **Teacher & student dashboards** with role-aware experiences
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🎓 Roles & Workflows
 
-**Use your preferred IDE**
+**Teachers** can create sessions, share resources, publish quizzes, mark attendance, and monitor class activity.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Students** join with a class code, answer quizzes, access shared materials, and stay focused during class.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🧱 Tech Stack
 
-Follow these steps:
+- **Frontend:** React, TypeScript, Vite
+- **UI:** Tailwind CSS, shadcn-ui, Radix UI
+- **State/Data:** React Query
+- **Backend:** Supabase (Auth, Storage, Realtime)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (recommended via [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+
+### Setup
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone https://github.com/anshul1058/mitclassrooms.git
 
-# Step 2: Navigate to the project directory.
-cd <Mit Classrooms>
+# Go to the project folder
+cd mitclassrooms
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file (or update the existing one) with your Supabase credentials:
 
-**Use GitHub Codespaces**
+```bash
+VITE_SUPABASE_URL="https://your-project.supabase.co"
+VITE_SUPABASE_PROJECT_ID="your-project-id"
+VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🧪 Scripts
 
-## What technologies are used for this project?
+- `npm run dev` – start the development server
+- `npm run build` – create a production build
+- `npm run lint` – run ESLint
+- `npm test` – run unit tests with Vitest
 
-This project is built with:
+## 📦 Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+If you are using Lovable, open the project and go to **Share → Publish** to deploy.
 
-## How can I deploy this project?
+## 🤝 Contributing
 
-Simply open [Lovable](https://mitclassrooms.lovable.app) and click on Share -> Publish.
+PRs and improvements are welcome. If you plan a larger change, please open an issue first to discuss.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Built for MIT Academy of Engineering, Pune.
