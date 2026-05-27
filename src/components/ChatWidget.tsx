@@ -78,7 +78,7 @@ async function streamChat({
   onDone();
 }
 
-const ChatWidget = () => {
+const ChatWidget = ({ classroomId }: { classroomId: string }) => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
