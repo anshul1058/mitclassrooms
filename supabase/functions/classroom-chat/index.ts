@@ -48,8 +48,15 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const ALLOWED_ROLES = new Set(["user", "assistant"]);
     let totalChars = 0;
     for (const m of messages) {
+      if (!m || !ALLOWED_ROLES.has(m.role)) {
+        return new Response(JSON.stringify({ error: "Invalid message role" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const c = typeof m?.content === "string" ? m.content : "";
       if (c.length > 4000) {
         return new Response(JSON.stringify({ error: "Individual message too long (max 4000 chars)" }), {
